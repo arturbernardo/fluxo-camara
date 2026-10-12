@@ -20,6 +20,12 @@ legislatura e, para quem aparece com mais de um partido, o histórico de eventos
 - A legislatura de 1946 está incompleta na base e ficou de fora.
 - A legislatura 2023–27 ainda não tem onda própria do BLS e repete a de 2021.
 
+## Cassações
+
+Deputados cassados pelo regime militar (AI-1, AI-2 e AI-5), extraídos da seção “Perdas de Mandato” das
+biografias oficiais em camara.leg.br por `dados/cassacoes.py`. Na página, aparecem como uma saída “cassados” à
+direita de cada legislatura e marcados na lista de deputados.
+
 ## Posição ideológica (0 = esquerda, 10 = direita)
 
 | Período | Fonte | O que mede |
@@ -44,6 +50,7 @@ python3 fetch.py        # baixa deputados por legislatura
 python3 fetch_hist.py   # baixa o histórico de quem trocou de partido
 python3 process.py      # padroniza siglas por época e gera ../dados.json
 python3 posicoes.py     # junta BLS e V-Party e gera ../posicoes.json
+python3 cassacoes.py    # lê as cassações nas biografias da Câmara e gera ../cassacoes.json
 cd ..
 python3 build.py        # gera index.html
 ```

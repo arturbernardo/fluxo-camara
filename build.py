@@ -6,4 +6,5 @@ HEAD = ('<!doctype html>\n<html lang="pt-BR">\n<head>\n<meta charset="utf-8">\n'
 t = open("template.html", encoding="utf-8").read()
 d = open("dados.json", encoding="utf-8").read().replace("</", "<\\/")
 p = open("posicoes.json", encoding="utf-8").read().replace("</", "<\\/")
-open("index.html", "w", encoding="utf-8").write(HEAD + t.replace("/*DATA*/", d).replace("/*POS*/", p) + "\n</body>\n</html>\n")
+c = open("cassacoes.json", encoding="utf-8").read().replace("</", "<\\/")
+open("index.html", "w", encoding="utf-8").write(HEAD + t.replace("/*DATA*/", d).replace("/*POS*/", p).replace("/*CASS*/", c) + "\n</body>\n</html>\n")

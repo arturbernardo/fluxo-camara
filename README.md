@@ -26,6 +26,13 @@ Deputados cassados pelo regime militar (AI-1, AI-2 e AI-5), extraídos da seçã
 biografias oficiais em camara.leg.br por `dados/cassacoes.py`. Na página, aparecem como uma faixa escura na base de
 cada bloco de partido e marcados na lista de deputados.
 
+## Exilados e mortos pela ditadura
+
+Mortos: deputados da base na lista de mortos e desaparecidos políticos da Comissão Nacional da Verdade (2014),
+cruzada pelo Wikidata. Exilados: lista revisada à mão a partir de menções a exílio nos artigos da Wikipédia e nas
+biografias da Câmara, mais a categoria de exilados da Wikipédia; só conta exílio durante a ditadura. A lista de
+exilados é incompleta. Detalhes e critérios em `dados/perseguicoes.py`.
+
 ## Biografias
 
 Cada deputado tem link para a biografia oficial na Câmara. O link para a Wikipédia vem do Wikidata (propriedade
@@ -58,6 +65,7 @@ python3 process.py      # padroniza siglas por época e gera ../dados.json
 python3 posicoes.py     # junta BLS e V-Party e gera ../posicoes.json
 python3 cassacoes.py    # lê as cassações nas biografias da Câmara e gera ../cassacoes.json
 python3 wikipedia.py    # liga deputados a artigos da Wikipédia (Wikidata + busca) e gera ../wikipedia.json
+python3 perseguicoes.py # lista revisada de exilados e mortos pela ditadura -> ../perseguicoes.json
 cd ..
 python3 build.py        # gera index.html
 ```

@@ -113,6 +113,10 @@ input[type=search]{font:inherit;font-size:14px;color:var(--ink);background:var(-
 @media (max-width:760px){.row{grid-template-columns:1fr}}
 .row .nm{all:unset;cursor:pointer;font-weight:600;font-size:14px;line-height:1.3}
 .row .nm:hover,.row .nm:focus-visible{text-decoration:underline;color:var(--accent)}
+.badges{display:flex;flex-wrap:wrap;gap:4px;margin-top:3px}
+.bdg{font-size:11px;font-weight:600;border-radius:3px;padding:0 6px;line-height:18px;cursor:help}
+.bdg.exilio{border:1px solid var(--cass);color:var(--ink)}
+.bdg.morte{background:var(--ink);color:var(--bg)}
 .links{display:block;font-size:12px;margin-top:2px}
 .links a{color:var(--accent);text-decoration:none}
 .links a:hover,.links a:focus-visible{text-decoration:underline}
@@ -168,7 +172,13 @@ button.more{align-self:flex-start;font:inherit;font-size:13px;background:var(--s
     <label class="ctl" for="l-q">Nome <input type="search" id="l-q" placeholder="ex.: Cadoca" autocomplete="off"></label>
     <label class="ctl" for="l-a">Passou por <select id="l-a"></select></label>
     <label class="ctl" for="l-b">e depois por <select id="l-b"></select></label>
-    <label class="ctl" for="l-cass"><input type="checkbox" id="l-cass"> só cassados</label>
+    <label class="ctl" for="l-cass">Perseguição <select id="l-cass">
+      <option value="">todos os deputados</option>
+      <option value="cass">cassados</option>
+      <option value="exilio">exilados</option>
+      <option value="morte">mortos pela ditadura</option>
+      <option value="any">qualquer uma dessas</option>
+    </select></label>
     <label class="ctl" for="l-sort">Ordenar por <select id="l-sort">
       <option value="trocas">mais trocas de partido</option>
       <option value="salto">maior salto ideológico</option>
@@ -187,6 +197,7 @@ button.more{align-self:flex-start;font:inherit;font-size:13px;background:var(--s
 <p><b>1967–1987 · V-Party</b> (V-Dem, <a href="https://www.v-dem.net/data/v-party-dataset/">dados</a>): especialistas situam os partidos na dimensão econômica a cada eleição, de 1970 em diante. Para ficar na mesma escala, os valores foram convertidos por regressão linear nas observações em que V-Party e BLS coincidem (<span id="calib"></span>).</p>
 <p><b>1951–1967 e partidos não avaliados · classificação provisória</b>, atribuída à mão a partir de leituras gerais da literatura, sem medida publicada. Aparece hachurada no gráfico e na tabela. Quando o partido não foi avaliado numa legislatura, mas foi na vizinha, usa-se a vizinha (em itálico na tabela).</p>
 <p><b>Cassados.</b> A faixa escura na base de um bloco mostra quantos deputados daquela bancada tiveram o mandato cassado e os direitos políticos suspensos durante a legislatura, pelo AI-1 (1964), AI-2 (1966) ou AI-5 (1968–69 e 1976–77). Fonte: seção “Perdas de Mandato” das biografias oficiais da Câmara. Inclui suplentes que estavam no exercício do mandato.</p>
+<p><b>Exilados e mortos.</b> Mortos: deputados que estão na lista de mortos e desaparecidos reconhecidos pela Comissão Nacional da Verdade (2014). Exilados: lista revisada à mão a partir dos artigos da Wikipédia e das biografias da Câmara; inclui só exílio durante a ditadura e está incompleta, porque depende de o exílio estar registrado nessas fontes. Passe o mouse sobre a marca para ver o detalhe.</p>
 <p>Partidos menores que o limite são agrupados em “outros” por faixa ideológica. Fonte: API de Dados Abertos da Câmara. Até 1987 a base registra um partido por deputado e legislatura; a legislatura de 1946 está incompleta e ficou de fora.</p>
 </div>
 
@@ -202,6 +213,7 @@ button.more{align-self:flex-start;font:inherit;font-size:13px;background:var(--s
 <script id="pos" type="application/json">/*POS*/</script>
 <script id="cass" type="application/json">/*CASS*/</script>
 <script id="wiki" type="application/json">/*WIKI*/</script>
+<script id="pers" type="application/json">/*PERS*/</script>
 <script>
 const D = JSON.parse(document.getElementById('data').textContent);
 const P = D.parties, LEGS = D.legs.map(l => l[0]), YEAR = Object.fromEntries(D.legs);
@@ -286,6 +298,14 @@ const cassIn = (id, L) => (CASS[id] || []).find(e => e[0] === L);
 const WIKI = JSON.parse(document.getElementById('wiki').textContent);
 const bioLinks = id => `<span class="links"><a href="https://www.camara.leg.br/deputados/${id}/biografia" target="_blank" rel="noopener">biografia na Câmara</a>` +
   (WIKI[id] ? ` · <a href="https://pt.wikipedia.org/wiki/${encodeURIComponent(WIKI[id])}" target="_blank" rel="noopener">Wikipédia</a>` : '') + '</span>';
+// exilados e mortos pela ditadura (dados/perseguicoes.py, lista revisada à mão): id -> {exilio, morte}
+const PERS = JSON.parse(document.getElementById('pers').textContent);
+const esc = s => s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+const persBadges = id => { const p = PERS[id]; if (!p) return '';
+  return '<span class="badges">' + (p.morte ? `<span class="bdg morte" title="${esc(p.morte)}">morto pela ditadura</span>` : '') +
+    (p.exilio ? `<span class="bdg exilio" title="${esc(p.exilio)}">exilado</span>` : '') + '</span>'; };
+const persText = id => { const p = PERS[id]; if (!p) return '';
+  return (p.morte ? `<p><b>Morte:</b> ${p.morte}</p>` : '') + (p.exilio ? `<p><b>Exílio:</b> ${p.exilio}</p>` : ''); };
 const actName = a => a === 'outro' ? 'ato não especificado' : a;
 
 // índice: legislatura -> id -> [início, fim]
@@ -451,7 +471,7 @@ function renderDetail(){
     const one = picked.kind === 'dep' ? DEP.get([...picked.deps][0]) : null;
     box.innerHTML = `<div class="detail"><div style="grid-column:1/-1;display:flex;flex-direction:column;gap:8px">
       <h3>${picked.kind === 'dep' ? 'Deputado' : picked.kind === 'cass' ? 'Mandatos cassados' : 'Faixa selecionada'}</h3>
-      <h2>${picked.title}</h2>${one ? bioLinks(one.id) : ''}
+      <h2>${picked.title}</h2>${one ? persBadges(one.id) + bioLinks(one.id) + persText(one.id) : ''}
       ${one ? `<div class="tl">${chips(one)}</div>` : (picked.kind === 'cass' ? `<p>${fmt(picked.deps.size)} deputados tiveram o mandato cassado e os direitos políticos suspensos durante a legislatura. Os nomes estão na lista logo abaixo.</p>` : `<p>${fmt(picked.deps.size)} deputados fizeram essa passagem. O caminho deles aparece destacado no gráfico, e a lista está logo abaixo.</p>`)}
       <p><button type="button" class="clear" id="clear">Limpar seleção</button></p></div></div>`;
     document.getElementById('clear').onclick = () => setPick(null);
@@ -538,7 +558,9 @@ function renderList(){
   let rows = [...DEP.values()].filter(dp => {
     if (picked && !picked.deps.has(dp.id)) return false;
     if (q && !dp.f.includes(q)) return false;
-    if (lc.checked && !CASS[dp.id]) return false;
+    if (lc.value === 'cass' && !CASS[dp.id]) return false;
+    if ((lc.value === 'exilio' || lc.value === 'morte') && !(PERS[dp.id] && PERS[dp.id][lc.value])) return false;
+    if (lc.value === 'any' && !CASS[dp.id] && !PERS[dp.id]) return false;
     if (A || B) {
       const i = A ? dp.sigs.indexOf(A) : -1;
       if (A && i < 0) return false;
@@ -555,7 +577,7 @@ function renderList(){
   if (picked) document.getElementById('l-clear').onclick = () => setPick(null);
   document.getElementById('l-count').textContent = `${fmt(rows.length)} deputado${rows.length === 1 ? '' : 's'}` + (rows.length > shown ? ` · mostrando ${fmt(shown)}` : '');
   document.getElementById('l-rows').innerHTML = rows.slice(0, shown).map(dp => `<div class="row">
-    <div><button type="button" class="nm" data-id="${dp.id}">${dp.name}</button><span class="uf">${dp.uf}</span>${bioLinks(dp.id)}</div>
+    <div><button type="button" class="nm" data-id="${dp.id}">${dp.name}</button><span class="uf">${dp.uf}</span>${persBadges(dp.id)}${bioLinks(dp.id)}</div>
     <div class="tl">${chips(dp)}</div>
     <div class="st">${dp.changes} troca${dp.changes === 1 ? '' : 's'}${dp.changes ? `<br><span class="z">salto ${fmtS(dp.jump)}</span>` : ''}</div></div>`).join('');
   document.getElementById('l-more').hidden = rows.length <= shown;

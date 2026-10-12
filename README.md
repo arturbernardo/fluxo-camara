@@ -18,10 +18,23 @@ legislatura e, para quem aparece com mais de um partido, o histórico de eventos
 
 - Até 1987 a base registra um partido por deputado e legislatura; trocas no meio do mandato só aparecem de 1987 em diante.
 - A legislatura de 1946 está incompleta na base e ficou de fora.
-- A posição ideológica (0 = esquerda, 10 = direita) é **provisória**: foi atribuída à mão, por partido e por período,
-  a partir de leituras gerais da literatura. Não é uma medida nem vem de um estudo específico. O plano é substituí-la
-  por dados de pesquisas publicadas (ex.: Brazilian Legislative Surveys, de Power & Zucco) onde houver cobertura.
-  Enquanto isso, a tabela completa está no fim da página e no objeto `POS` em `template.html`.
+- A legislatura 2023–27 ainda não tem onda própria do BLS e repete a de 2021.
+
+## Posição ideológica (0 = esquerda, 10 = direita)
+
+| Período | Fonte | O que mede |
+|---|---|---|
+| 1987–2027 | [Brazilian Legislative Surveys](https://doi.org/10.7910/DVN/6KVTUV) (Zucco & Power, 2024), 9 ondas de 1990 a 2021 | Deputados situam os partidos na escala esquerda–direita. Escala original de −1 a +1, convertida para 0–10. |
+| 1967–1987 | [V-Party](https://www.v-dem.net/data/v-party-dataset/) (V-Dem), variável `v2pariglef`, eleições de 1970 a 1986 | Especialistas situam os partidos na dimensão econômica. Convertido para a escala BLS por regressão linear nas observações em que as duas fontes coincidem (r = 0,97, n = 78). |
+| 1951–1967 e partidos não avaliados | Classificação provisória, atribuída à mão | Sem medida publicada; aparece hachurada na página. |
+
+Quando um partido não foi avaliado numa legislatura, mas foi na vizinha, usa-se o valor da vizinha. As siglas
+seguem a genealogia do apêndice do BLS (ex.: PDS → PPR → PPB → PP; PFL → DEM; PL → PR → PL). Os arquivos de origem
+estão em `dados/fontes/`, e a junção é feita por `dados/posicoes.py`. A classificação provisória e as notas de
+contexto ficam no objeto `POS` em `template.html`.
+
+Licenças das fontes: BLS em CC0; o extrato do V-Party (só partidos brasileiros, vindo do pacote
+[vdemdata](https://github.com/vdeminstitute/vdemdata)) segue a licença CC BY-SA 4.0 do V-Dem.
 
 ## Como atualizar
 
@@ -30,6 +43,7 @@ cd dados
 python3 fetch.py        # baixa deputados por legislatura
 python3 fetch_hist.py   # baixa o histórico de quem trocou de partido
 python3 process.py      # padroniza siglas por época e gera ../dados.json
+python3 posicoes.py     # junta BLS e V-Party e gera ../posicoes.json
 cd ..
 python3 build.py        # gera index.html
 ```

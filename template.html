@@ -63,6 +63,13 @@ svg.hov .link.on{stroke-opacity:.8}
 .node text{font-size:11.5px;fill:var(--ink);pointer-events:none}
 .node text .n{fill:var(--muted);font-family:var(--mono);font-size:10.5px}
 .era{stroke:var(--axis);stroke-dasharray:3 4}
+.colsrc{font-size:10px;fill:var(--muted);font-style:italic}
+table.ser{font-size:12px;margin-top:6px}
+table.ser td,table.ser th{padding:2px 8px 2px 0;text-align:left;position:static;background:none}
+table.ser tr.cur td{font-weight:700;color:var(--ink)}
+td.s.prov{background-image:repeating-linear-gradient(45deg,transparent 0 3px,rgba(255,255,255,.55) 3px 5px)!important;font-style:italic}
+td.s.near{font-style:italic}
+.hatch{display:inline-block;width:14px;height:11px;border-radius:2px;vertical-align:-1px;margin-right:6px;background:var(--i2) repeating-linear-gradient(45deg,transparent 0 3px,var(--surface) 3px 5px)}
 .eralbl{font-size:10.5px;fill:var(--accent);font-weight:600}
 #tip{position:fixed;pointer-events:none;z-index:9;background:var(--ink);color:var(--bg);font-size:12.5px;line-height:1.45;padding:8px 10px;border-radius:5px;max-width:300px;opacity:0;transition:opacity .08s}
 .hint{font-size:13px;color:var(--muted)}
@@ -90,6 +97,8 @@ th{color:var(--muted);font-weight:600;font-size:11.5px}
 td:first-child,th:first-child{text-align:left;position:sticky;left:0;background:var(--bg)}
 td.s{font-family:var(--mono);font-size:11.5px;border-radius:2px}
 .note{font-size:13px;color:var(--muted);max-width:90ch}
+.sources{display:flex;flex-direction:column;gap:6px}
+.sources p{margin:0}
 .link{cursor:pointer}
 .listp{padding:16px 18px;display:flex;flex-direction:column;gap:14px}
 .listp h2{font-size:22px;font-weight:800;margin:0;letter-spacing:-.01em}
@@ -137,7 +146,7 @@ button.more{align-self:flex-start;font:inherit;font-size:13px;background:var(--s
     <label class="ctl" for="f-to">até <select id="f-to"></select></label>
     <label class="ctl" for="f-min">Agrupar abaixo de <input type="range" id="f-min" min="1" max="20" value="8"> <b id="f-minv" class="num">8</b></label>
   </div>
-  <div class="scale"><span>Esquerda 0</span><span class="grad" id="grad"></span><span>10 Direita</span></div>
+  <div class="scale"><span>Esquerda 0</span><span class="grad" id="grad"></span><span>10 Direita</span><span style="margin-left:12px"><span class="hatch"></span>posição provisória</span></div>
 </div>
 
 <div class="panel chart">
@@ -166,10 +175,16 @@ button.more{align-self:flex-start;font:inherit;font-size:13px;background:var(--s
   <button type="button" class="more" id="l-more">Mostrar mais</button>
 </section>
 
-<p class="note"><b>Posição ideológica provisória:</b> escala de 0 a 10 atribuída à mão, por partido e por período, a partir de leituras gerais da literatura. Não é uma medida nem vem de um estudo específico; será substituída por dados de pesquisas publicadas onde houver. Partidos menores que o limite são agrupados em “outros” por faixa ideológica. Fonte: API de Dados Abertos da Câmara. Até 1987 a base registra um partido por deputado e legislatura; a legislatura de 1946 está incompleta e ficou de fora.</p>
+<div class="note sources">
+<p><b>De onde vêm as posições (0 = esquerda, 10 = direita).</b></p>
+<p><b>1987–2027 · Brazilian Legislative Surveys</b> (Zucco &amp; Power, 2024; <a href="https://doi.org/10.7910/DVN/6KVTUV">dados</a>): em 9 ondas de 1990 a 2021, os próprios deputados situam os partidos numa escala esquerda–direita. A escala original (−1 a +1) foi convertida para 0–10. A legislatura 2023–27 repete a onda de 2021; o União Brasil usa a estimativa dos autores para a fusão DEM + PSL.</p>
+<p><b>1967–1987 · V-Party</b> (V-Dem, <a href="https://www.v-dem.net/data/v-party-dataset/">dados</a>): especialistas situam os partidos na dimensão econômica a cada eleição, de 1970 em diante. Para ficar na mesma escala, os valores foram convertidos por regressão linear nas observações em que V-Party e BLS coincidem (<span id="calib"></span>).</p>
+<p><b>1951–1967 e partidos não avaliados · classificação provisória</b>, atribuída à mão a partir de leituras gerais da literatura, sem medida publicada. Aparece hachurada no gráfico e na tabela. Quando o partido não foi avaliado numa legislatura, mas foi na vizinha, usa-se a vizinha (em itálico na tabela).</p>
+<p>Partidos menores que o limite são agrupados em “outros” por faixa ideológica. Fonte: API de Dados Abertos da Câmara. Até 1987 a base registra um partido por deputado e legislatura; a legislatura de 1946 está incompleta e ficou de fora.</p>
+</div>
 
 <details>
-  <summary>Tabela de posições por legislatura (para revisar)</summary>
+  <summary>Tabela de posições por legislatura, com a fonte de cada valor</summary>
   <div class="tscroll"><table id="ptable"></table></div>
 </details>
 </div>
@@ -177,6 +192,7 @@ button.more{align-self:flex-start;font:inherit;font-size:13px;background:var(--s
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/d3-sankey@0.12.3/dist/d3-sankey.min.js"></script>
 <script id="data" type="application/json">/*DATA*/</script>
+<script id="pos" type="application/json">/*POS*/</script>
 <script>
 const D = JSON.parse(document.getElementById('data').textContent);
 const P = D.parties, LEGS = D.legs.map(l => l[0]), YEAR = Object.fromEntries(D.legs);
@@ -219,7 +235,26 @@ function posOf(k, L){
   e.forEach(x => { if (x[0] <= L) cur = x; });
   return cur;
 }
-const scoreOf = (k, L) => { const p = posOf(k, L); return p ? p[1] : null; };
+// posições medidas (BLS / V-Party), geradas por dados/posicoes.py; o resto usa POS (provisório)
+const MP = JSON.parse(document.getElementById('pos').textContent);
+const SRC = {
+  'BLS': 'Brazilian Legislative Surveys (Zucco & Power)',
+  'BLS~': 'Brazilian Legislative Surveys, onda de legislatura vizinha',
+  'V-Party': 'V-Party (V-Dem), convertido para a escala BLS',
+  'V-Party~': 'V-Party (V-Dem), eleição vizinha, convertido para a escala BLS',
+  'prov': 'classificação provisória, sem medida publicada',
+};
+const BLS_WAVE = {48:1990,49:1993,50:1997,51:2001,52:2005,53:2009,54:2013,55:2017,56:2021,57:2021};
+const VP_ELEC = {43:1970,44:1970,45:1974,46:1978,47:1982};
+function infoOf(k, L){
+  const m = MP.pos[k] && MP.pos[k][L];
+  if (m) return {v: m[0], src: m[1]};
+  const p = posOf(k, L);
+  return p ? {v: p[1], src: 'prov'} : null;
+}
+const scoreOf = (k, L) => { const i = infoOf(k, L); return i ? i.v : null; };
+const isProv = (k, L) => { const i = infoOf(k, L); return !i || i.src === 'prov'; };
+const srcShort = s => s === 'prov' ? 'provisória' : s.replace('~', ' (vizinha)');
 const BANDS = [[0,2,'esquerda'],[2,4,'centro-esquerda'],[4,6,'centro'],[6,8,'centro-direita'],[8,10.01,'direita']];
 const bandOf = s => s == null ? 5 : BANDS.findIndex(b => s >= b[0] && s < b[1]);
 const bandName = b => b === 5 ? 'sem partido / n/i' : BANDS[b][2];
@@ -279,9 +314,10 @@ function draw(){
     if (!nodes.has(id)) nodes.set(id, {id, L, k: g, col, fixedValue: 0, deps: [], wsum: 0, wn: 0, members: new Map()});
     const n = nodes.get(id); n.fixedValue++; n.deps.push(dep);
     const sc = scoreOf(s, L); if (sc != null) { n.wsum += sc; n.wn++; }
+    if (!unknown(s) && isProv(s, L)) n.prov = (n.prov || 0) + 1;
     n.members.set(s, (n.members.get(s) || 0) + 1);
   }));
-  nodes.forEach(n => n.score = n.wn ? n.wsum / n.wn : null);
+  nodes.forEach(n => { n.score = n.wn ? n.wsum / n.wn : null; n.provShare = (n.prov || 0) / n.fixedValue; });
   legs.slice(0, -1).forEach(L => byLeg[L].forEach(([s], dep) => {
     const nx = byLeg[L + 1].get(dep); if (!nx) return;
     const src = L + '|' + nodeKey(L, s, sizes, min), tgt = (L + 1) + '|' + nodeKey(L + 1, nx[0], sizes, min), id = src + '>' + tgt;
@@ -293,21 +329,30 @@ function draw(){
   const ord = n => n.score == null ? 99 : n.score;
   const sk = d3.sankey().nodeId(d => d.id).nodeWidth(13).nodePadding(4)
     .nodeAlign(d => d.col).nodeSort((x, y) => ord(x) - ord(y) || y.fixedValue - x.fixedValue)
-    .extent([[1, 54], [W - 96, H - 6]]);
+    .extent([[1, 68], [W - 96, H - 6]]);
   graph = sk({nodes: [...nodes.values()].map(d => ({...d})), links: [...links.values()].map(d => ({...d}))});
   if (picked && picked.L != null && !(picked.L >= a && picked.L <= b)) picked = null;
   render(W, H, a, b);
 }
 
+function colSource(L){
+  if (BLS_WAVE[L]) return L === 57 ? 'posições: BLS 2021 (repetida)' : `posições: BLS ${BLS_WAVE[L]}`;
+  if (VP_ELEC[L]) return `posições: V-Party ${VP_ELEC[L]}` + (L === 43 ? ' (vizinha)' : '');
+  return 'posições provisórias';
+}
 function render(W, H, a, b){
   const svg = d3.select('#sankey').attr('viewBox', `0 0 ${W} ${H}`).attr('width', W).attr('height', H);
   svg.selectAll('*').remove();
+  const defs = svg.append('defs').append('pattern').attr('id', 'hatch').attr('width', 5).attr('height', 5)
+    .attr('patternUnits', 'userSpaceOnUse').attr('patternTransform', 'rotate(45)');
+  defs.append('rect').attr('width', 2).attr('height', 5).attr('fill', css('--surface')).attr('fill-opacity', .75);
   const cols = d3.group(graph.nodes, d => d.col);
   cols.forEach(ns => { const x = ns[0].x0;
     svg.append('text').attr('class', 'colh').attr('x', x).attr('y', 14).text(yrRange(ns[0].L));
-    svg.append('text').attr('class', 'colsub').attr('x', x).attr('y', 28).text(fmt(d3.sum(ns, n => n.fixedValue)) + ' dep.'); });
+    svg.append('text').attr('class', 'colsub').attr('x', x).attr('y', 28).text(fmt(d3.sum(ns, n => n.fixedValue)) + ' dep.');
+    svg.append('text').attr('class', 'colsrc').attr('x', x).attr('y', 42).text(colSource(ns[0].L)); });
   ERAS.forEach(e => { const n = graph.nodes.find(n => n.L === e.L); if (!n) return;
-    svg.append('text').attr('class', 'eralbl').attr('x', n.x0).attr('y', 42).text(e.t);
+    svg.append('text').attr('class', 'eralbl').attr('x', n.x0).attr('y', 56).text(e.t);
     if (e.L !== a) svg.append('line').attr('class', 'era').attr('x1', n.x0 - 10).attr('x2', n.x0 - 10).attr('y1', 0).attr('y2', H);
   });
   const lk = svg.append('g').selectAll('path').data(graph.links).join('path').attr('class', 'link')
@@ -334,12 +379,15 @@ function render(W, H, a, b){
     .attr('rx', 2).attr('fill', d => color(d.score))
     .classed('picked', d => picked && picked.L === d.L && picked.key === d.k)
     .on('mouseenter', (e, d) => { if (picked) return; svg.classed('hov', true); lk.classed('on', l => l.source === d || l.target === d); })
-    .on('mousemove', (e, d) => { const p = d.k.startsWith('OUT_') ? null : posOf(d.k, d.L);
+    .on('mousemove', (e, d) => { const one = !d.k.startsWith('OUT_'), p = one ? posOf(d.k, d.L) : null, i = one ? infoOf(d.k, d.L) : null;
       const inSel = picked ? d.deps.filter(x => picked.deps.has(x)).length : 0;
       showTip(e, `<b>${fullName(d)}</b><br>${yrRange(d.L)} · ${fmt(d.fixedValue)} deputados<br>Posição ${fmtS(d.score)} (${bandName(bandOf(d.score))})` +
-        (p && p[2] ? `<br><i>${p[2]}</i>` : '') + (picked ? `<br>${fmt(inSel)} da seleção` : '')); })
+        (i ? `<br>Fonte: ${SRC[i.src]}` : (d.provShare > .5 ? '<br>Fonte: majoritariamente provisória' : '')) +
+        (p && p[2] ? `<br><i>Contexto: ${p[2]}</i>` : '') + (picked ? `<br>${fmt(inSel)} da seleção` : '')); })
     .on('mouseleave', () => { svg.classed('hov', false); lk.classed('on', false); hideTip(); })
     .on('click', (e, d) => pick(d));
+  nd.filter(d => d.provShare > .5).append('rect').attr('x', d => d.x0).attr('y', d => d.y0).attr('width', d => d.x1 - d.x0)
+    .attr('height', d => Math.max(1, d.y1 - d.y0)).attr('rx', 2).attr('fill', 'url(#hatch)').attr('pointer-events', 'none');
   nd.filter(d => d.y1 - d.y0 >= 9).append('text').attr('x', d => d.x1 + 5).attr('y', d => (d.y0 + d.y1) / 2 + 4)
     .text(d => label(d) + ' ').append('tspan').attr('class', 'n').text(d => d.fixedValue);
   // rótulos do eixo
@@ -387,7 +435,14 @@ function renderDetail(){
   const to = n.sourceLinks.map(l => [l.target, l.value]).sort((x, y) => y[1] - x[1]);
   const newcomers = n.fixedValue - d3.sum(from, f => f[1]);
   const left = n.fixedValue - d3.sum(to, f => f[1]);
-  const hist = !n.k.startsWith('OUT_') && POS[n.k] ? POS[n.k].map(x => `${yr(x[0])}: ${fmtS(x[1])}${x[2] ? ' — ' + x[2] : ''}`).join('<br>') : '';
+  let hist = '';
+  if (!n.k.startsWith('OUT_')) {
+    const series = LEGS.filter(L => byLeg[L] && [...byLeg[L].values()].some(v => v[0] === n.k || v[1] === n.k)).map(L => ({L, i: infoOf(n.k, L)})).filter(x => x.i);
+    const notes = (POS[n.k] || []).filter(x => x[2]).map(x => `${yr(x[0])}: ${x[2]}`);
+    hist = `<table class="ser"><tr><th>Legislatura</th><th>Posição</th><th>Fonte</th></tr>` +
+      series.map(x => `<tr${x.L === n.L ? ' class="cur"' : ''}><td>${yrRange(x.L)}</td><td class="num">${fmtS(x.i.v)}</td><td>${srcShort(x.i.src)}</td></tr>`).join('') + '</table>' +
+      (notes.length ? `<p style="font-size:12.5px;margin-top:6px"><b>Contexto:</b> ${notes.join(' · ')}</p>` : '');
+  }
   const members = n.k.startsWith('OUT_') ? '<p style="margin-top:8px">Inclui: ' + [...n.members].sort((x, y) => y[1] - x[1]).map(([k, v]) => `${P[k][0]} (${v})`).join(', ') + '</p>' : '';
   const s = n.score == null ? 5 : n.score;
   box.innerHTML = `<div class="detail">
@@ -396,7 +451,7 @@ function renderDetail(){
       <h2>${fullName(n)}</h2>
       <p>${fmt(n.fixedValue)} deputados tomaram posse por essa bancada.</p>
       <div class="pos"><div class="track" style="background:${document.getElementById('grad').style.background}"><div class="mark" style="left:calc(${s * 10}% - 1px)"></div></div>${fmtS(n.score)} · ${bandName(bandOf(n.score))}</div>
-      ${hist ? `<p style="font-size:13px">${hist}</p>` : ''}${members}
+      ${hist}${members}
       <p style="margin-top:12px"><button type="button" class="clear" id="clear">Limpar seleção</button></p>
     </div>
     <div><h3>Vieram de (${n.L > +fFrom.value ? yr(n.L - 1) : '—'})</h3>${from.length ? flist(from) : '<p>Fora do período exibido.</p>'}${n.L > +fFrom.value ? `<p style="margin-top:8px;font-size:13px">${fmt(newcomers)} não eram deputados na legislatura anterior.</p>` : ''}</div>
@@ -407,14 +462,14 @@ function renderDetail(){
 
 // ---------- tabela de posições ----------
 function renderTable(){
-  const rows = Object.keys(POS).filter(k => P[k]).map(k => ({k, cells: LEGS.map(L => {
+  const rows = [...new Set([...Object.keys(POS), ...Object.keys(MP.pos)])].filter(k => P[k]).map(k => ({k, cells: LEGS.map(L => {
     const present = byLeg[L] && [...byLeg[L].values()].some(v => v[0] === k || v[1] === k);
-    return present ? scoreOf(k, L) : undefined; })}))
+    return present ? infoOf(k, L) : undefined; })}))
     .filter(r => r.cells.some(c => c !== undefined))
-    .sort((x, y) => LEGS.findIndex((L, i) => x.cells[i] !== undefined) - LEGS.findIndex((L, i) => y.cells[i] !== undefined) || d3.mean(x.cells.filter(c => c != null)) - d3.mean(y.cells.filter(c => c != null)));
+    .sort((x, y) => LEGS.findIndex((L, i) => x.cells[i] !== undefined) - LEGS.findIndex((L, i) => y.cells[i] !== undefined) || d3.mean(x.cells.filter(c => c), c => c.v) - d3.mean(y.cells.filter(c => c), c => c.v));
   document.getElementById('ptable').innerHTML = `<thead><tr><th>Partido</th>${LEGS.map(L => `<th>${yr(L)}</th>`).join('')}</tr></thead><tbody>` +
     rows.map(r => `<tr><td title="${P[r.k][1]}">${P[r.k][0]} <span class="hint">${P[r.k][1].match(/\((\d{4}.*?)\)/)?.[1] || ''}</span></td>${r.cells.map(c => c === undefined ? '<td></td>' :
-      `<td class="s" style="background:${color(c)};color:${c < 1.5 || c > 8.5 ? '#fff' : '#141414'}">${fmtS(c)}</td>`).join('')}</tr>`).join('') + '</tbody>';
+      c === null ? '<td></td>' : `<td class="s${c.src === 'prov' ? ' prov' : c.src.endsWith('~') ? ' near' : ''}" title="${SRC[c.src]}" style="background:${color(c.v)};color:${c.v < 1.5 || c.v > 8.5 ? '#fff' : '#141414'}">${fmtS(c.v)}</td>`).join('')}</tr>`).join('') + '</tbody>';
 }
 
 // ---------- lista de deputados ----------
@@ -481,6 +536,7 @@ function renderList(){
 lq.oninput = la.onchange = lb.onchange = ls.onchange = () => { shown = PAGE; renderList(); };
 document.getElementById('l-more').onclick = () => { shown += PAGE; renderList(); };
 
+document.getElementById('calib').textContent = `posição = ${MP.calib.a.toLocaleString('pt-BR')} + ${MP.calib.b.toLocaleString('pt-BR')} × valor V-Party; correlação ${MP.calib.r.toLocaleString('pt-BR')} em ${MP.calib.n} observações`;
 function all(){ makeColor(); draw(); renderTable(); }
 all();
 let rt; addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(draw, 150); });

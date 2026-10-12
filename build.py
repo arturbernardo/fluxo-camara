@@ -5,4 +5,5 @@ HEAD = ('<!doctype html>\n<html lang="pt-BR">\n<head>\n<meta charset="utf-8">\n'
         'com partidos ordenados por posição ideológica de cada época.">\n</head>\n<body>\n')
 t = open("template.html", encoding="utf-8").read()
 d = open("dados.json", encoding="utf-8").read().replace("</", "<\\/")
-open("index.html", "w", encoding="utf-8").write(HEAD + t.replace("/*DATA*/", d) + "\n</body>\n</html>\n")
+p = open("posicoes.json", encoding="utf-8").read().replace("</", "<\\/")
+open("index.html", "w", encoding="utf-8").write(HEAD + t.replace("/*DATA*/", d).replace("/*POS*/", p) + "\n</body>\n</html>\n")

@@ -18,9 +18,10 @@ legislatura e, para quem aparece com mais de um partido, o histórico de eventos
 
 - Até 1987 a base registra um partido por deputado e legislatura; trocas no meio do mandato só aparecem de 1987 em diante.
 - A legislatura de 1946 está incompleta na base e ficou de fora.
-- A posição ideológica (0 = esquerda, 10 = direita) é uma classificação simplificada, atribuída à mão por partido
-  e por período, com base na literatura (para a fase recente, aproximada de Bolognesi, Ribeiro & Codato, 2023).
-  Ainda está em revisão; a tabela completa está no fim da página e no objeto `POS` em `template.html`.
+- A posição ideológica (0 = esquerda, 10 = direita) é **provisória**: foi atribuída à mão, por partido e por período,
+  a partir de leituras gerais da literatura. Não é uma medida nem vem de um estudo específico. O plano é substituí-la
+  por dados de pesquisas publicadas (ex.: Brazilian Legislative Surveys, de Power & Zucco) onde houver cobertura.
+  Enquanto isso, a tabela completa está no fim da página e no objeto `POS` em `template.html`.
 
 ## Como atualizar
 

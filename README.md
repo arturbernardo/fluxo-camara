@@ -23,8 +23,8 @@ legislatura e, para quem aparece com mais de um partido, o histórico de eventos
 ## Cassações
 
 Deputados cassados pelo regime militar (AI-1, AI-2 e AI-5), extraídos da seção “Perdas de Mandato” das
-biografias oficiais em camara.leg.br por `dados/cassacoes.py`. Na página, aparecem como uma saída “cassados” à
-direita de cada legislatura e marcados na lista de deputados.
+biografias oficiais em camara.leg.br por `dados/cassacoes.py`. Na página, aparecem como uma faixa escura na base de
+cada bloco de partido e marcados na lista de deputados.
 
 ## Posição ideológica (0 = esquerda, 10 = direita)
 

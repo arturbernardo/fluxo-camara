@@ -191,7 +191,7 @@ button.more{align-self:flex-start;font:inherit;font-size:13px;background:var(--s
 <p><b>1987–2027 · Brazilian Legislative Surveys</b> (Zucco &amp; Power, 2024; <a href="https://doi.org/10.7910/DVN/6KVTUV">dados</a>): em 9 ondas de 1990 a 2021, os próprios deputados situam os partidos numa escala esquerda–direita. A escala original (−1 a +1) foi convertida para 0–10. A legislatura 2023–27 repete a onda de 2021; o União Brasil usa a estimativa dos autores para a fusão DEM + PSL.</p>
 <p><b>1967–1987 · V-Party</b> (V-Dem, <a href="https://www.v-dem.net/data/v-party-dataset/">dados</a>): especialistas situam os partidos na dimensão econômica a cada eleição, de 1970 em diante. Para ficar na mesma escala, os valores foram convertidos por regressão linear nas observações em que V-Party e BLS coincidem (<span id="calib"></span>).</p>
 <p><b>1951–1967 e partidos não avaliados · classificação provisória</b>, atribuída à mão a partir de leituras gerais da literatura, sem medida publicada. Aparece hachurada no gráfico e na tabela. Quando o partido não foi avaliado numa legislatura, mas foi na vizinha, usa-se a vizinha (em itálico na tabela).</p>
-<p><b>Cassados.</b> A saída “cassados”, à direita de cada legislatura de 1963 a 1979, reúne os deputados que tiveram o mandato cassado e os direitos políticos suspensos pelo AI-1 (1964), AI-2 (1966) ou AI-5 (1968–69 e 1976–77). Fonte: seção “Perdas de Mandato” das biografias oficiais da Câmara. Inclui suplentes que estavam no exercício do mandato.</p>
+<p><b>Cassados.</b> A faixa escura na base de um bloco mostra quantos deputados daquela bancada tiveram o mandato cassado e os direitos políticos suspensos durante a legislatura, pelo AI-1 (1964), AI-2 (1966) ou AI-5 (1968–69 e 1976–77). Fonte: seção “Perdas de Mandato” das biografias oficiais da Câmara. Inclui suplentes que estavam no exercício do mandato.</p>
 <p>Partidos menores que o limite são agrupados em “outros” por faixa ideológica. Fonte: API de Dados Abertos da Câmara. Até 1987 a base registra um partido por deputado e legislatura; a legislatura de 1946 está incompleta e ficou de fora.</p>
 </div>
 
@@ -316,9 +316,8 @@ function nodeKey(L, k, sizes, min){
   if (sizes[L].get(k) >= min) return k;
   return 'OUT_' + bandOf(scoreOf(k, L));
 }
-const isCass = n => n.k === 'CASS';
-function label(n){ return isCass(n) ? 'cassados' : n.k.startsWith('OUT_') ? 'outros' : P[n.k][0]; }
-function fullName(n){ return isCass(n) ? `Cassados durante ${yrRange(n.cassL)}` : n.k.startsWith('OUT_') ? `Outros partidos (${bandName(+n.k.slice(4))})` : P[n.k][1]; }
+function label(n){ return n.k.startsWith('OUT_') ? 'outros' : P[n.k][0]; }
+function fullName(n){ return n.k.startsWith('OUT_') ? `Outros partidos (${bandName(+n.k.slice(4))})` : P[n.k][1]; }
 
 function draw(){
   syncPresets();
@@ -335,6 +334,7 @@ function draw(){
     const sc = scoreOf(s, L); if (sc != null) { n.wsum += sc; n.wn++; }
     if (!unknown(s) && isProv(s, L)) n.prov = (n.prov || 0) + 1;
     n.members.set(s, (n.members.get(s) || 0) + 1);
+    if (cassIn(dep, L) && !(byLeg[L + 1] && byLeg[L + 1].has(dep))) { n.cass = (n.cass || 0) + 1; (n.cassDeps = n.cassDeps || []).push(dep); }
   }));
   nodes.forEach(n => { n.score = n.wn ? n.wsum / n.wn : null; n.provShare = (n.prov || 0) / n.fixedValue; });
   legs.slice(0, -1).forEach(L => byLeg[L].forEach(([s], dep) => {
@@ -343,21 +343,9 @@ function draw(){
     if (!links.has(id)) links.set(id, {source: src, target: tgt, value: 0, deps: []});
     const l = links.get(id); l.value++; l.deps.push(dep);
   }));
-  // saída "cassados": deputados cassados durante a legislatura L, numa coluna à direita dela
-  legs.slice(0, -1).forEach((L, col) => byLeg[L].forEach(([s], dep) => {
-    const ev = cassIn(dep, L); if (!ev || byLeg[L + 1].has(dep)) return;
-    const id = (L + 1) + '|CASS';
-    if (!nodes.has(id)) nodes.set(id, {id, L: L + 1, cassL: L, k: 'CASS', col: col + 1, fixedValue: 0, deps: [], score: null, provShare: 0, acts: new Map(), members: new Map()});
-    const n = nodes.get(id); n.fixedValue++; n.deps.push(dep);
-    n.acts.set(`${actName(ev[2])}, ${ev[1]}`, (n.acts.get(`${actName(ev[2])}, ${ev[1]}`) || 0) + 1);
-    n.members.set(s, (n.members.get(s) || 0) + 1);
-    const src = L + '|' + nodeKey(L, s, sizes, min), lid = src + '>' + id;
-    if (!links.has(lid)) links.set(lid, {source: src, target: id, value: 0, deps: []});
-    const l = links.get(lid); l.value++; l.deps.push(dep);
-  }));
   const colW = 158, H = 700;
   const W = Math.max(legs.length * colW, document.getElementById('wrap').clientWidth - 24);
-  const ord = n => isCass(n) ? 100 : n.score == null ? 99 : n.score;
+  const ord = n => n.score == null ? 99 : n.score;
   const sk = d3.sankey().nodeId(d => d.id).nodeWidth(13).nodePadding(4)
     .nodeAlign(d => d.col).nodeSort((x, y) => ord(x) - ord(y) || y.fixedValue - x.fixedValue)
     .extent([[1, 68], [W - 96, H - 6]]);
@@ -380,7 +368,7 @@ function render(W, H, a, b){
   const cols = d3.group(graph.nodes, d => d.col);
   cols.forEach(ns => { const x = ns[0].x0;
     svg.append('text').attr('class', 'colh').attr('x', x).attr('y', 14).text(yrRange(ns[0].L));
-    svg.append('text').attr('class', 'colsub').attr('x', x).attr('y', 28).text(fmt(d3.sum(ns.filter(n => !isCass(n)), n => n.fixedValue)) + ' dep.');
+    svg.append('text').attr('class', 'colsub').attr('x', x).attr('y', 28).text(fmt(d3.sum(ns, n => n.fixedValue)) + ' dep.' + (d3.sum(ns, n => n.cass || 0) ? ` · ${d3.sum(ns, n => n.cass || 0)} cassados` : ''));
     svg.append('text').attr('class', 'colsrc').attr('x', x).attr('y', 42).text(colSource(ns[0].L)); });
   ERAS.forEach(e => { const n = graph.nodes.find(n => n.L === e.L); if (!n) return;
     svg.append('text').attr('class', 'eralbl').attr('x', n.x0).attr('y', 56).text(e.t);
@@ -407,22 +395,29 @@ function render(W, H, a, b){
   }
   const nd = svg.append('g').selectAll('g').data(graph.nodes).join('g').attr('class', 'node');
   nd.append('rect').attr('x', d => d.x0).attr('y', d => d.y0).attr('width', d => d.x1 - d.x0).attr('height', d => Math.max(1, d.y1 - d.y0))
-    .attr('rx', 2).attr('fill', d => isCass(d) ? css('--cass') : color(d.score))
+    .attr('rx', 2).attr('fill', d => color(d.score))
     .classed('picked', d => picked && picked.L === d.L && picked.key === d.k)
     .on('mouseenter', (e, d) => { if (picked) return; svg.classed('hov', true); lk.classed('on', l => l.source === d || l.target === d); })
-    .on('mousemove', (e, d) => { if (isCass(d)) return showTip(e, `<b>${fullName(d)}</b><br>${fmt(d.fixedValue)} deputados perderam o mandato e os direitos políticos<br>` +
-        [...d.acts].sort().map(([k, v]) => `${k}: ${v}`).join('<br>') + `<br>Partidos: ${[...d.members].sort((x, y) => y[1] - x[1]).map(([k, v]) => `${P[k][0]} ${v}`).join(', ')}`);
+    .on('mousemove', (e, d) => {
       const one = !d.k.startsWith('OUT_'), p = one ? posOf(d.k, d.L) : null, i = one ? infoOf(d.k, d.L) : null;
       const inSel = picked ? d.deps.filter(x => picked.deps.has(x)).length : 0;
       showTip(e, `<b>${fullName(d)}</b><br>${yrRange(d.L)} · ${fmt(d.fixedValue)} deputados<br>Posição ${fmtS(d.score)} (${bandName(bandOf(d.score))})` +
         (i ? `<br>Fonte: ${SRC[i.src]}` : (d.provShare > .5 ? '<br>Fonte: majoritariamente provisória' : '')) +
-        (p && p[2] ? `<br><i>Contexto: ${p[2]}</i>` : '') + (picked ? `<br>${fmt(inSel)} da seleção` : '')); })
+        (d.cass ? `<br><b>${d.cass} cassados</b> durante a legislatura` : '') + (p && p[2] ? `<br><i>Contexto: ${p[2]}</i>` : '') + (picked ? `<br>${fmt(inSel)} da seleção` : '')); })
     .on('mouseleave', () => { svg.classed('hov', false); lk.classed('on', false); hideTip(); })
     .on('click', (e, d) => pick(d));
+  nd.filter(d => d.cass).append('rect').attr('class', 'cassbar')
+    .attr('x', d => d.x0).attr('width', d => d.x1 - d.x0)
+    .attr('y', d => d.y1 - Math.max(2, (d.y1 - d.y0) * d.cass / d.fixedValue)).attr('height', d => Math.max(2, (d.y1 - d.y0) * d.cass / d.fixedValue))
+    .attr('fill', css('--cass')).attr('stroke', css('--surface')).attr('stroke-width', .75)
+    .on('mousemove', (e, d) => showTip(e, `<b>${d.cass} cassados</b> · ${label(d)} ${yrRange(d.L)}<br>` +
+      [...d3.rollup(d.cassDeps, v => v.length, id => { const c = cassIn(id, d.L); return `${actName(c[2])}, ${c[1]}`; })].sort().map(([k, v]) => `${k}: ${v}`).join('<br>') + '<br><i>Clique para ver os nomes</i>'))
+    .on('mouseleave', hideTip)
+    .on('click', (e, d) => { e.stopPropagation(); setPick({kind: 'cass', L: d.L, deps: new Set(d.cassDeps), title: `Cassados do ${label(d)} em ${yrRange(d.L)}`}); });
   nd.filter(d => d.provShare > .5).append('rect').attr('x', d => d.x0).attr('y', d => d.y0).attr('width', d => d.x1 - d.x0)
     .attr('height', d => Math.max(1, d.y1 - d.y0)).attr('rx', 2).attr('fill', 'url(#hatch)').attr('pointer-events', 'none');
   nd.filter(d => d.y1 - d.y0 >= 9).append('text').attr('x', d => d.x1 + 5).attr('y', d => (d.y0 + d.y1) / 2 + 4)
-    .text(d => label(d) + ' ').append('tspan').attr('class', 'n').text(d => d.fixedValue);
+    .text(d => label(d) + ' ').append('tspan').attr('class', 'n').text(d => d.fixedValue + (d.cass ? ` · ${d.cass} cass.` : ''));
   // rótulos do eixo
   const ya = document.getElementById('yaxis').getBoundingClientRect().height;
   document.getElementById('ytop').style.top = '90px'; document.getElementById('ybot').style.top = (ya - 90) + 'px';
@@ -432,7 +427,7 @@ function render(W, H, a, b){
 
 function pick(d){
   if (picked && picked.L === d.L && picked.key === d.k) setPick(null);
-  else setPick({kind: 'node', L: d.L, key: d.k, deps: new Set(d.deps), title: isCass(d) ? fullName(d) : `${fullName(d)} · ${yrRange(d.L)}`});
+  else setPick({kind: 'node', L: d.L, key: d.k, deps: new Set(d.deps), title: `${fullName(d)} · ${yrRange(d.L)}`});
 }
 function setPick(p){
   picked = p; hideTip(); shown = PAGE;
@@ -444,7 +439,7 @@ function setPick(p){
 function flist(entries, total){
   const max = d3.max(entries, e => e[1]) || 1;
   return '<ul class="flist">' + entries.map(([n, v]) =>
-    `<li><span class="lb" title="${fullName(n)}">${label(n)}</span><div><div class="b" style="width:${Math.max(3, v / max * 100)}%;background:${isCass(n) ? css('--cass') : color(n.score)}"></div></div><span class="v">${v}</span></li>`).join('') + '</ul>';
+    `<li><span class="lb" title="${fullName(n)}">${label(n)}</span><div><div class="b" style="width:${Math.max(3, v / max * 100)}%;background:${color(n.score)}"></div></div><span class="v">${v}</span></li>`).join('') + '</ul>';
 }
 function renderDetail(){
   const box = document.getElementById('detail');
@@ -455,26 +450,14 @@ function renderDetail(){
   if (picked.kind !== 'node') {
     const one = picked.kind === 'dep' ? DEP.get([...picked.deps][0]) : null;
     box.innerHTML = `<div class="detail"><div style="grid-column:1/-1;display:flex;flex-direction:column;gap:8px">
-      <h3>${picked.kind === 'dep' ? 'Deputado' : 'Faixa selecionada'}</h3>
+      <h3>${picked.kind === 'dep' ? 'Deputado' : picked.kind === 'cass' ? 'Mandatos cassados' : 'Faixa selecionada'}</h3>
       <h2>${picked.title}</h2>
-      ${one ? `<div class="tl">${chips(one)}</div>` : `<p>${fmt(picked.deps.size)} deputados fizeram essa passagem. O caminho deles aparece destacado no gráfico, e a lista está logo abaixo.</p>`}
+      ${one ? `<div class="tl">${chips(one)}</div>` : (picked.kind === 'cass' ? `<p>${fmt(picked.deps.size)} deputados tiveram o mandato cassado e os direitos políticos suspensos durante a legislatura. Os nomes estão na lista logo abaixo.</p>` : `<p>${fmt(picked.deps.size)} deputados fizeram essa passagem. O caminho deles aparece destacado no gráfico, e a lista está logo abaixo.</p>`)}
       <p><button type="button" class="clear" id="clear">Limpar seleção</button></p></div></div>`;
     document.getElementById('clear').onclick = () => setPick(null);
     return;
   }
   const n = graph.nodes.find(x => x.L === picked.L && x.k === picked.key);
-  if (isCass(n)) {
-    const from = n.targetLinks.map(l => [l.source, l.value]).sort((x, y) => y[1] - x[1]);
-    box.innerHTML = `<div class="detail">
-      <div><h3>Saída da Câmara</h3><h2>${fullName(n)}</h2>
-        <p>${fmt(n.fixedValue)} deputados tiveram o mandato cassado e os direitos políticos suspensos pelo regime militar.</p>
-        <p style="margin-top:8px">${[...n.acts].sort().map(([k, v]) => `${k}: <b>${v}</b>`).join('<br>')}</p>
-        <p style="margin-top:12px"><button type="button" class="clear" id="clear">Limpar seleção</button></p></div>
-      <div><h3>De qual bancada</h3>${flist(from)}</div>
-      <div><h3>Lista</h3><p>Os nomes estão na lista de deputados logo abaixo.</p></div></div>`;
-    document.getElementById('clear').onclick = () => setPick(null);
-    return;
-  }
   const p = n.k.startsWith('OUT_') ? null : posOf(n.k, n.L);
   const from = n.targetLinks.map(l => [l.source, l.value]).sort((x, y) => y[1] - x[1]);
   const to = n.sourceLinks.map(l => [l.target, l.value]).sort((x, y) => y[1] - x[1]);
@@ -494,13 +477,13 @@ function renderDetail(){
     <div>
       <h3>${yrRange(n.L)}</h3>
       <h2>${fullName(n)}</h2>
-      <p>${fmt(n.fixedValue)} deputados tomaram posse por essa bancada.</p>
+      <p>${fmt(n.fixedValue)} deputados tomaram posse por essa bancada.${n.cass ? ` <b>${n.cass}</b> foram cassados durante a legislatura.` : ''}</p>
       <div class="pos"><div class="track" style="background:${document.getElementById('grad').style.background}"><div class="mark" style="left:calc(${s * 10}% - 1px)"></div></div>${fmtS(n.score)} · ${bandName(bandOf(n.score))}</div>
       ${hist}${members}
       <p style="margin-top:12px"><button type="button" class="clear" id="clear">Limpar seleção</button></p>
     </div>
     <div><h3>Vieram de (${n.L > +fFrom.value ? yr(n.L - 1) : '—'})</h3>${from.length ? flist(from) : '<p>Fora do período exibido.</p>'}${n.L > +fFrom.value ? `<p style="margin-top:8px;font-size:13px">${fmt(newcomers)} não eram deputados na legislatura anterior.</p>` : ''}</div>
-    <div><h3>Foram para (${n.L < +fTo.value ? yr(n.L + 1) : '—'})</h3>${to.length ? flist(to) : '<p>Fora do período exibido.</p>'}${n.L < +fTo.value ? `<p style="margin-top:8px;font-size:13px">${fmt(left)} não voltaram na legislatura seguinte.</p>` : ''}</div>
+    <div><h3>Foram para (${n.L < +fTo.value ? yr(n.L + 1) : '—'})</h3>${to.length ? flist(to) : '<p>Fora do período exibido.</p>'}${n.L < +fTo.value ? `<p style="margin-top:8px;font-size:13px">${fmt(left)} não voltaram na legislatura seguinte${n.cass ? `, dos quais ${n.cass} cassados` : ''}.</p>` : ''}</div>
   </div>`;
   document.getElementById('clear').onclick = () => setPick(null);
 }

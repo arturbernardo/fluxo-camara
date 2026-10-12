@@ -1,0 +1,489 @@
+<title>Fluxo da Câmara</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;500;600;800&family=Newsreader:opsz,wght@6..72,400;6..72,500&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#f4f5f3; --surface:#fbfbfa; --ink:#14181b; --ink2:#4b5257; --muted:#868c8f;
+  --grid:#dfe2df; --axis:#b9bdb8; --accent:#0d5c48; --accent-ink:#ffffff;
+  --i0:#c4413c; --i1:#e39a92; --i2:#b4b4ac; --i3:#91b1dc; --i4:#2d61b0; --na:#d6d6d0;
+  --link-op:.30; --hi:#14181b;
+  --sans:"Libre Franklin",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --serif:"Newsreader",Georgia,"Times New Roman",serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  color-scheme:dark;
+  --bg:#101315; --surface:#171b1e; --ink:#eef0ee; --ink2:#b7bdbd; --muted:#80878a;
+  --grid:#272c2f; --axis:#3a4044; --accent:#4fbf9c; --accent-ink:#06120e;
+  --i0:#ec6a62; --i1:#a8605a; --i2:#5c5f5d; --i3:#4c74ad; --i4:#86aaf0; --na:#363b3e;
+  --link-op:.40; --hi:#eef0ee;
+}}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#101315; --surface:#171b1e; --ink:#eef0ee; --ink2:#b7bdbd; --muted:#80878a;
+  --grid:#272c2f; --axis:#3a4044; --accent:#4fbf9c; --accent-ink:#06120e;
+  --i0:#ec6a62; --i1:#a8605a; --i2:#5c5f5d; --i3:#4c74ad; --i4:#86aaf0; --na:#363b3e;
+  --link-op:.40; --hi:#eef0ee;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;padding-inline:20px;padding-block:0 56px}
+.wrap{max-width:1400px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+header{padding-top:36px;display:flex;flex-direction:column;gap:8px}
+.eyebrow{font-size:12px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:600}
+h1{font-weight:800;font-size:clamp(30px,4.4vw,48px);line-height:1.02;letter-spacing:-.02em;margin:0;text-wrap:balance}
+.lede{font-family:var(--serif);font-size:17.5px;line-height:1.55;color:var(--ink2);max-width:72ch;margin:0}
+.bar{display:flex;flex-wrap:wrap;gap:12px 22px;align-items:center;justify-content:space-between}
+.controls{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center}
+label.ctl{display:flex;gap:8px;align-items:center;font-size:13px;color:var(--ink2)}
+select,input[type=range]{font:inherit;font-size:14px;color:var(--ink)}
+select{background:var(--surface);border:1px solid var(--axis);border-radius:5px;padding:6px 8px}
+input[type=range]{accent-color:var(--accent);width:110px}
+.seg{display:inline-flex;flex-wrap:wrap;border:1px solid var(--axis);border-radius:5px;overflow:hidden}
+.seg button{font:inherit;font-size:13px;border:0;border-right:1px solid var(--axis);background:var(--surface);color:var(--ink2);padding:6px 11px;cursor:pointer}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+select:focus-visible,input:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.scale{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--ink2)}
+.scale .grad{width:180px;height:10px;border-radius:2px}
+.panel{background:var(--surface);border:1px solid var(--grid);border-radius:8px}
+.chart{display:grid;grid-template-columns:26px minmax(0,1fr)}
+.yaxis{position:relative;border-right:1px solid var(--grid)}
+.yaxis span{position:absolute;left:50%;transform:translateX(-50%) rotate(-90deg);white-space:nowrap;font-size:11.5px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;padding:12px 12px 8px}
+svg text{fill:var(--ink2);font-family:var(--sans)}
+.colh{font-size:12px;fill:var(--ink);font-weight:600}
+.colsub{font-size:10.5px;fill:var(--muted)}
+.link{fill:none;stroke-opacity:var(--link-op);transition:stroke-opacity .12s}
+svg.sel .link{stroke-opacity:.07}
+svg.hov .link{stroke-opacity:.07}
+svg.hov .link.on{stroke-opacity:.8}
+.ov{fill:none;stroke-opacity:.85;pointer-events:none}
+.node rect{cursor:pointer}
+.node rect.picked{stroke:var(--hi);stroke-width:2}
+.node text{font-size:11.5px;fill:var(--ink);pointer-events:none}
+.node text .n{fill:var(--muted);font-family:var(--mono);font-size:10.5px}
+.era{stroke:var(--axis);stroke-dasharray:3 4}
+.eralbl{font-size:10.5px;fill:var(--accent);font-weight:600}
+#tip{position:fixed;pointer-events:none;z-index:9;background:var(--ink);color:var(--bg);font-size:12.5px;line-height:1.45;padding:8px 10px;border-radius:5px;max-width:300px;opacity:0;transition:opacity .08s}
+.hint{font-size:13px;color:var(--muted)}
+.detail{padding:16px 18px;display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr) minmax(0,1fr);gap:22px}
+@media (max-width:860px){.detail{grid-template-columns:1fr}}
+.detail h2{font-size:22px;font-weight:800;margin:0 0 4px;letter-spacing:-.01em}
+.detail h3{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 8px;font-weight:600}
+.detail p{margin:0;color:var(--ink2);font-size:14px}
+.pos{display:flex;align-items:center;gap:10px;margin:10px 0 8px;font-size:13px;color:var(--ink2)}
+.pos .track{position:relative;width:160px;height:8px;border-radius:2px}
+.pos .mark{position:absolute;top:-4px;width:3px;height:16px;background:var(--ink);border-radius:1px}
+.flist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:5px}
+.flist li{display:grid;grid-template-columns:76px minmax(0,1fr) 34px;gap:8px;align-items:center;font-size:13px}
+.flist .lb{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12.5px}
+.flist .b{height:12px;border-radius:2px}
+.flist .v{font-family:var(--mono);font-size:12px;color:var(--ink2);text-align:right}
+.dot{width:9px;height:9px;border-radius:50%;display:inline-block;flex:none;vertical-align:0}
+button.clear{font:inherit;font-size:13px;background:none;border:1px solid var(--axis);color:var(--ink2);border-radius:5px;padding:4px 10px;cursor:pointer}
+details{border-top:1px solid var(--grid);padding-top:12px}
+summary{cursor:pointer;font-weight:600;font-size:14px}
+.tscroll{overflow-x:auto;margin-top:10px}
+table{border-collapse:collapse;font-size:12.5px}
+th,td{padding:4px 7px;border-bottom:1px solid var(--grid);text-align:center;white-space:nowrap}
+th{color:var(--muted);font-weight:600;font-size:11.5px}
+td:first-child,th:first-child{text-align:left;position:sticky;left:0;background:var(--bg)}
+td.s{font-family:var(--mono);font-size:11.5px;border-radius:2px}
+.note{font-size:13px;color:var(--muted);max-width:90ch}
+.link{cursor:pointer}
+.listp{padding:16px 18px;display:flex;flex-direction:column;gap:14px}
+.listp h2{font-size:22px;font-weight:800;margin:0;letter-spacing:-.01em}
+.listp>p{margin:0;color:var(--ink2);font-size:14px;max-width:80ch}
+.filters{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center}
+input[type=search]{font:inherit;font-size:14px;color:var(--ink);background:var(--surface);border:1px solid var(--axis);border-radius:5px;padding:6px 8px;width:min(240px,100%)}
+.ctx{display:flex;flex-wrap:wrap;align-items:center;gap:10px;font-size:13.5px;background:var(--bg);border:1px solid var(--grid);border-radius:6px;padding:8px 10px}
+.ctx b{font-weight:600}
+.count{font-size:13px;color:var(--muted)}
+.rows{display:flex;flex-direction:column}
+.row{display:grid;grid-template-columns:minmax(150px,220px) minmax(0,1fr) 120px;gap:6px 16px;align-items:start;padding:9px 0;border-top:1px solid var(--grid)}
+@media (max-width:760px){.row{grid-template-columns:1fr}}
+.row .nm{all:unset;cursor:pointer;font-weight:600;font-size:14px;line-height:1.3}
+.row .nm:hover,.row .nm:focus-visible{text-decoration:underline;color:var(--accent)}
+.row .uf{font-size:12px;color:var(--muted);font-weight:400;margin-left:4px}
+.tl{display:flex;flex-wrap:wrap;gap:4px 6px;align-items:center}
+.ch{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;border:1px solid var(--grid);border-radius:4px;padding:1px 6px;background:var(--surface);white-space:nowrap}
+.ch .y{font-family:var(--mono);font-size:10.5px;color:var(--muted)}
+.ch.sw{border-color:var(--axis)}
+.skip{font-size:11px;color:var(--muted)}
+.st{font-size:12px;color:var(--ink2);text-align:right;font-family:var(--mono)}
+@media (max-width:760px){.st{text-align:left}}
+.st .z{color:var(--muted)}
+button.more{align-self:flex-start;font:inherit;font-size:13px;background:var(--surface);border:1px solid var(--axis);color:var(--ink);border-radius:5px;padding:6px 12px;cursor:pointer}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div id="tip" role="status" aria-live="polite"></div>
+<div class="wrap">
+<header>
+  <div class="eyebrow">Câmara dos Deputados · 1951 – 2027</div>
+  <h1>O fluxo dos deputados entre partidos</h1>
+  <p class="lede">Cada coluna é uma legislatura, e cada bloco é uma bancada no momento da posse. Dentro da coluna, os partidos estão ordenados da esquerda (em cima) para a direita (embaixo), segundo a posição que tinham <em>naquela época</em>. As faixas ligam os deputados que voltaram na legislatura seguinte. Clique num bloco para seguir os membros daquela bancada por todas as colunas.</p>
+</header>
+
+<div class="bar">
+  <div class="controls">
+    <div class="seg" role="group" aria-label="Período">
+      <button type="button" data-r="39,57">Tudo</button>
+      <button type="button" data-r="39,47">1951 → ditadura</button>
+      <button type="button" data-r="45,51">Redemocratização</button>
+      <button type="button" data-r="51,57">Nova República recente</button>
+    </div>
+    <label class="ctl" for="f-from">De <select id="f-from"></select></label>
+    <label class="ctl" for="f-to">até <select id="f-to"></select></label>
+    <label class="ctl" for="f-min">Agrupar abaixo de <input type="range" id="f-min" min="1" max="20" value="8"> <b id="f-minv" class="num">8</b></label>
+  </div>
+  <div class="scale"><span>Esquerda 0</span><span class="grad" id="grad"></span><span>10 Direita</span></div>
+</div>
+
+<div class="panel chart">
+  <div class="yaxis" id="yaxis"><span id="ytop">← esquerda</span><span id="ybot">direita →</span></div>
+  <div class="scroll" id="wrap"><svg id="sankey"></svg></div>
+</div>
+
+<div class="panel" id="detail"></div>
+
+<section class="panel listp" id="lista">
+  <h2>Deputados e suas migrações</h2>
+  <p>Cada linha é a trajetória de um deputado, legislatura por legislatura; a seta marca troca de partido no meio do mandato. Clique numa faixa ou num bloco do gráfico para listar só aqueles deputados, ou no nome de um deputado para ver o caminho dele no gráfico.</p>
+  <div class="filters">
+    <label class="ctl" for="l-q">Nome <input type="search" id="l-q" placeholder="ex.: Cadoca" autocomplete="off"></label>
+    <label class="ctl" for="l-a">Passou por <select id="l-a"></select></label>
+    <label class="ctl" for="l-b">e depois por <select id="l-b"></select></label>
+    <label class="ctl" for="l-sort">Ordenar por <select id="l-sort">
+      <option value="trocas">mais trocas de partido</option>
+      <option value="salto">maior salto ideológico</option>
+      <option value="nome">nome</option>
+    </select></label>
+  </div>
+  <div id="l-ctx"></div>
+  <div class="count" id="l-count"></div>
+  <div class="rows" id="l-rows"></div>
+  <button type="button" class="more" id="l-more">Mostrar mais</button>
+</section>
+
+<p class="note">Posição: escala de 0 a 10 atribuída por partido e por período, uma primeira proposta baseada na literatura (para a fase recente, aproximada da classificação de Bolognesi, Ribeiro &amp; Codato, 2023). Partidos menores que o limite são agrupados em “outros” por faixa ideológica. Fonte: API de Dados Abertos da Câmara. Até 1987 a base registra um partido por deputado e legislatura; a legislatura de 1946 está incompleta e ficou de fora.</p>
+
+<details>
+  <summary>Tabela de posições por legislatura (para revisar)</summary>
+  <div class="tscroll"><table id="ptable"></table></div>
+</details>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3-sankey@0.12.3/dist/d3-sankey.min.js"></script>
+<script id="data" type="application/json">/*DATA*/</script>
+<script>
+const D = JSON.parse(document.getElementById('data').textContent);
+const P = D.parties, LEGS = D.legs.map(l => l[0]), YEAR = Object.fromEntries(D.legs);
+const yr = L => YEAR[L];
+const yrRange = L => `${YEAR[L]}–${L === 57 ? '2027' : YEAR[L + 1]}`;
+
+// Posição 0 (esquerda) – 10 (direita) por período: [legislatura inicial, posição, nota]
+// Vale a partir da legislatura indicada até a próxima entrada.
+const POS = {
+  PCB:[[39,1]], PSB47:[[39,2.5]], PTB45:[[39,4,'Trabalhismo varguista'],[42,3,'Radicalização no governo Jango']],
+  MTR:[[39,3.5]], PST45:[[39,4]], PTR45:[[39,4]], PRT45:[[39,4]], PTN45:[[39,4.8]], PSP:[[39,5.5,'Adhemarismo, populismo paulista']],
+  PSD45:[[39,5.8,'Partido de governo de Vargas e JK, base rural']], PDC45:[[39,5.5]], PSC45:[[39,5.8]], PR45:[[39,6.8]], PL45:[[39,6.8]],
+  UDN:[[39,7.5,'Oposição liberal-conservadora a Vargas']], PRP45:[[39,9,'Herdeiro do integralismo']],
+  MDB:[[42,4.2,'Oposição consentida'],[45,3.8,'Crescimento dos “autênticos”'],[55,5.8,'Volta da sigla MDB (2017), centro governista']],
+  ARENA:[[42,8,'Partido de sustentação do regime militar']],
+  PMDB:[[46,4.2,'Frente de oposição ao regime'],[48,4.5,'Constituinte'],[49,5.2],[51,5.5,'Centro governista'],[55,5.8]],
+  PP80:[[46,5,'Partido de Tancredo, oposição moderada']], PDS:[[46,8,'Sucessor da ARENA']],
+  PDT:[[46,3,'Trabalhismo de Brizola']], PTB81:[[46,6.5],[55,7],[56,8.5,'Guinada bolsonarista']],
+  PT:[[46,1,'Socialista, contra a Constituição de 1988'],[51,1.5],[52,1.8,'Partido de governo, moderação']],
+  PFL:[[48,8]], DEM:[[53,8]], UNIÃO:[[56,8]],
+  PSDB:[[48,3.8,'Dissidência social-democrata do PMDB'],[50,5,'Governo FHC, aliança com PFL'],[54,5.8],[55,6.5,'Oposição ao PT, impeachment']],
+  PCdoB:[[48,0.8]], PDC85:[[48,7.5]],
+  PL:[[48,7.5],[52,6.5,'Aliado de Lula (vice José Alencar)'],[56,7.5],[57,8.8,'Partido de Bolsonaro']],
+  PR:[[53,6.8,'Fusão PL + PRONA, base governista'],[56,7]],
+  PRONA:[[51,9]], PJ:[[48,7]], PRN:[[48,7,'Partido de Collor']], PTC:[[52,7]], PTdoB:[[48,6]], AVANTE:[[55,6]],
+  PSTU:[[49,0.3]], PMN:[[49,5.5]], PRS:[[49,6.5]], PSD87:[[49,7]], PST90:[[49,6.5]], PTR:[[49,7]], PP93:[[49,7]],
+  PPR:[[50,8]], PPB:[[50,8]], PP:[[52,7.6,'Base de governos de todos os lados'],[56,8.2]],
+  PPS:[[50,3,'Ex-PCB'],[52,4.2],[54,5]], CIDADANIA:[[56,5.2]],
+  PV:[[50,4],[55,4.5]], PSB:[[48,3.3],[55,4,'Apoio ao impeachment de 2016'],[56,3.5]],
+  PSC:[[48,8.5]], PSL:[[51,7,'Pequeno, liberal'],[56,9,'Partido de Bolsonaro em 2018']],
+  PSOL:[[52,0.5]], PMR:[[52,7.5]], PRB:[[52,7.5]], REPUBLICANOS:[[56,8]],
+  PSDC:[[52,7.5]], DC:[[56,7.5]], PAN:[[53,6.5]], PHS:[[53,6.5]], PRTB:[[53,8.5]],
+  PROS:[[54,6]], SOLIDARIEDADE:[[54,6]], PEN:[[54,7.5]], PATRIOTA:[[55,9]], PRD:[[57,8.3]],
+  PRP89:[[50,7.5]], PTN:[[55,6.5]], PODE:[[55,6.5]], PMB:[[55,6.5]], REDE:[[55,3]], PPL:[[55,2.5]],
+  NOVO:[[56,8.7]], MISSÃO:[[57,8.8]], PSD:[[54,6.5,'Criado por Kassab, governista']],
+};
+function posOf(k, L){
+  const e = POS[k]; if (!e) return null;
+  let cur = e[0];
+  e.forEach(x => { if (x[0] <= L) cur = x; });
+  return cur;
+}
+const scoreOf = (k, L) => { const p = posOf(k, L); return p ? p[1] : null; };
+const BANDS = [[0,2,'esquerda'],[2,4,'centro-esquerda'],[4,6,'centro'],[6,8,'centro-direita'],[8,10.01,'direita']];
+const bandOf = s => s == null ? 5 : BANDS.findIndex(b => s >= b[0] && s < b[1]);
+const bandName = b => b === 5 ? 'sem partido / n/i' : BANDS[b][2];
+
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+let color;
+function makeColor(){
+  const sc = d3.scaleLinear().domain([0, 2.5, 5, 7.5, 10]).range(['--i0','--i1','--i2','--i3','--i4'].map(css)).interpolate(d3.interpolateLab).clamp(true);
+  const na = css('--na');
+  color = s => s == null ? na : sc(s);
+  document.getElementById('grad').style.background = `linear-gradient(90deg, ${d3.range(0, 10.01, 1).map(v => sc(v)).join(',')})`;
+}
+const fmt = n => n.toLocaleString('pt-BR');
+const fmtS = s => s == null ? '—' : s.toLocaleString('pt-BR', {minimumFractionDigits: 1, maximumFractionDigits: 1});
+
+// índice: legislatura -> id -> [início, fim]
+const byLeg = {}; LEGS.forEach(L => byLeg[L] = new Map());
+D.deps.forEach(d => d[3].forEach(s => byLeg[s[0]].set(d[0], [s[1], s[2] || s[1]])));
+
+// ---------- controles ----------
+const fFrom = document.getElementById('f-from'), fTo = document.getElementById('f-to'), fMin = document.getElementById('f-min');
+LEGS.forEach(L => { fFrom.add(new Option(yrRange(L), L)); fTo.add(new Option(yrRange(L), L)); });
+fFrom.value = 39; fTo.value = 57;
+const presets = [...document.querySelectorAll('.seg button')];
+function syncPresets(){ presets.forEach(b => b.setAttribute('aria-pressed', b.dataset.r === `${fFrom.value},${fTo.value}`)); }
+presets.forEach(b => b.onclick = () => { const [a, z] = b.dataset.r.split(','); fFrom.value = a; fTo.value = z; draw(); });
+fFrom.onchange = fTo.onchange = draw;
+fMin.oninput = () => { document.getElementById('f-minv').textContent = fMin.value; draw(); };
+
+// ---------- tooltip ----------
+const tip = document.getElementById('tip');
+function showTip(e, html){ tip.innerHTML = html; tip.style.opacity = 1; const x = Math.min(e.clientX + 14, innerWidth - tip.offsetWidth - 8), y = Math.min(e.clientY + 14, innerHeight - tip.offsetHeight - 8); tip.style.left = x + 'px'; tip.style.top = y + 'px'; }
+function hideTip(){ tip.style.opacity = 0; }
+
+// ---------- sankey ----------
+const ERAS = [{L:43, t:'AI-2: só ARENA e MDB'}, {L:46, t:'Reforma partidária'}, {L:48, t:'Constituinte'}, {L:53, t:'Fidelidade partidária (TSE)'}, {L:56, t:'Janela partidária'}];
+let picked = null; // {L, key, deps:Set}
+let graph;
+
+function nodeKey(L, k, sizes, min){
+  if (sizes[L].get(k) >= min) return k;
+  return 'OUT_' + bandOf(scoreOf(k, L));
+}
+function label(n){ return n.k.startsWith('OUT_') ? 'outros' : P[n.k][0]; }
+function fullName(n){ return n.k.startsWith('OUT_') ? `Outros partidos (${bandName(+n.k.slice(4))})` : P[n.k][1]; }
+
+function draw(){
+  syncPresets();
+  let a = +fFrom.value, b = +fTo.value; if (b < a) [a, b] = [b, a];
+  if (a === b) b = Math.min(57, a + 1), a = b - 1;
+  const min = +fMin.value;
+  const legs = LEGS.filter(L => L >= a && L <= b);
+  const sizes = {}; legs.forEach(L => sizes[L] = d3.rollup([...byLeg[L].values()], v => v.length, d => d[0]));
+  const nodes = new Map(), links = new Map();
+  legs.forEach((L, col) => byLeg[L].forEach(([s], dep) => {
+    const g = nodeKey(L, s, sizes, min), id = L + '|' + g;
+    if (!nodes.has(id)) nodes.set(id, {id, L, k: g, col, fixedValue: 0, deps: [], wsum: 0, wn: 0, members: new Map()});
+    const n = nodes.get(id); n.fixedValue++; n.deps.push(dep);
+    const sc = scoreOf(s, L); if (sc != null) { n.wsum += sc; n.wn++; }
+    n.members.set(s, (n.members.get(s) || 0) + 1);
+  }));
+  nodes.forEach(n => n.score = n.wn ? n.wsum / n.wn : null);
+  legs.slice(0, -1).forEach(L => byLeg[L].forEach(([s], dep) => {
+    const nx = byLeg[L + 1].get(dep); if (!nx) return;
+    const src = L + '|' + nodeKey(L, s, sizes, min), tgt = (L + 1) + '|' + nodeKey(L + 1, nx[0], sizes, min), id = src + '>' + tgt;
+    if (!links.has(id)) links.set(id, {source: src, target: tgt, value: 0, deps: []});
+    const l = links.get(id); l.value++; l.deps.push(dep);
+  }));
+  const colW = 158, H = 700;
+  const W = Math.max(legs.length * colW, document.getElementById('wrap').clientWidth - 24);
+  const ord = n => n.score == null ? 99 : n.score;
+  const sk = d3.sankey().nodeId(d => d.id).nodeWidth(13).nodePadding(4)
+    .nodeAlign(d => d.col).nodeSort((x, y) => ord(x) - ord(y) || y.fixedValue - x.fixedValue)
+    .extent([[1, 54], [W - 96, H - 6]]);
+  graph = sk({nodes: [...nodes.values()].map(d => ({...d})), links: [...links.values()].map(d => ({...d}))});
+  if (picked && picked.L != null && !(picked.L >= a && picked.L <= b)) picked = null;
+  render(W, H, a, b);
+}
+
+function render(W, H, a, b){
+  const svg = d3.select('#sankey').attr('viewBox', `0 0 ${W} ${H}`).attr('width', W).attr('height', H);
+  svg.selectAll('*').remove();
+  const cols = d3.group(graph.nodes, d => d.col);
+  cols.forEach(ns => { const x = ns[0].x0;
+    svg.append('text').attr('class', 'colh').attr('x', x).attr('y', 14).text(yrRange(ns[0].L));
+    svg.append('text').attr('class', 'colsub').attr('x', x).attr('y', 28).text(fmt(d3.sum(ns, n => n.fixedValue)) + ' dep.'); });
+  ERAS.forEach(e => { const n = graph.nodes.find(n => n.L === e.L); if (!n) return;
+    svg.append('text').attr('class', 'eralbl').attr('x', n.x0).attr('y', 42).text(e.t);
+    if (e.L !== a) svg.append('line').attr('class', 'era').attr('x1', n.x0 - 10).attr('x2', n.x0 - 10).attr('y1', 0).attr('y2', H);
+  });
+  const lk = svg.append('g').selectAll('path').data(graph.links).join('path').attr('class', 'link')
+    .attr('d', d3.sankeyLinkHorizontal()).attr('stroke', d => color(d.source.score)).attr('stroke-width', d => Math.max(1, d.width))
+    .on('mousemove', (e, d) => showTip(e, `<b>${label(d.source)}</b> ${yr(d.source.L)} → <b>${label(d.target)}</b> ${yr(d.target.L)}<br>${fmt(d.value)} deputados` +
+      (picked ? `<br>${fmt(d.deps.filter(x => picked.deps.has(x)).length)} da seleção` : '')))
+    .on('mouseleave', hideTip)
+    .on('click', (e, d) => setPick({kind: 'link', L: d.source.L, deps: new Set(d.deps),
+      title: `${label(d.source)} ${yr(d.source.L)} → ${label(d.target)} ${yr(d.target.L)}`}));
+  // sobreposição: caminho da bancada escolhida
+  const ov = svg.append('g');
+  if (picked) {
+    svg.classed('sel', true);
+    graph.links.forEach(l => {
+      const c = l.deps.reduce((s, x) => s + (picked.deps.has(x) ? 1 : 0), 0); if (!c) return;
+      const w = l.width * c / l.value;
+      const ys = l.y0 - l.width / 2 + w / 2, yt = l.y1 - l.width / 2 + w / 2;
+      ov.append('path').attr('class', 'ov').attr('stroke', color(l.source.score)).attr('stroke-width', Math.max(picked.kind === 'dep' ? 3 : 1, w))
+        .attr('d', d3.linkHorizontal()({source: [l.source.x1, ys], target: [l.target.x0, yt]}));
+    });
+  }
+  const nd = svg.append('g').selectAll('g').data(graph.nodes).join('g').attr('class', 'node');
+  nd.append('rect').attr('x', d => d.x0).attr('y', d => d.y0).attr('width', d => d.x1 - d.x0).attr('height', d => Math.max(1, d.y1 - d.y0))
+    .attr('rx', 2).attr('fill', d => color(d.score))
+    .classed('picked', d => picked && picked.L === d.L && picked.key === d.k)
+    .on('mouseenter', (e, d) => { if (picked) return; svg.classed('hov', true); lk.classed('on', l => l.source === d || l.target === d); })
+    .on('mousemove', (e, d) => { const p = d.k.startsWith('OUT_') ? null : posOf(d.k, d.L);
+      const inSel = picked ? d.deps.filter(x => picked.deps.has(x)).length : 0;
+      showTip(e, `<b>${fullName(d)}</b><br>${yrRange(d.L)} · ${fmt(d.fixedValue)} deputados<br>Posição ${fmtS(d.score)} (${bandName(bandOf(d.score))})` +
+        (p && p[2] ? `<br><i>${p[2]}</i>` : '') + (picked ? `<br>${fmt(inSel)} da seleção` : '')); })
+    .on('mouseleave', () => { svg.classed('hov', false); lk.classed('on', false); hideTip(); })
+    .on('click', (e, d) => pick(d));
+  nd.filter(d => d.y1 - d.y0 >= 9).append('text').attr('x', d => d.x1 + 5).attr('y', d => (d.y0 + d.y1) / 2 + 4)
+    .text(d => label(d) + ' ').append('tspan').attr('class', 'n').text(d => d.fixedValue);
+  // rótulos do eixo
+  const ya = document.getElementById('yaxis').getBoundingClientRect().height;
+  document.getElementById('ytop').style.top = '90px'; document.getElementById('ybot').style.top = (ya - 90) + 'px';
+  renderDetail();
+  renderList();
+}
+
+function pick(d){
+  if (picked && picked.L === d.L && picked.key === d.k) setPick(null);
+  else setPick({kind: 'node', L: d.L, key: d.k, deps: new Set(d.deps), title: `${fullName(d)} · ${yrRange(d.L)}`});
+}
+function setPick(p){
+  picked = p; hideTip(); shown = PAGE;
+  const W = +d3.select('#sankey').attr('width'), H = +d3.select('#sankey').attr('height');
+  render(W, H, +fFrom.value, +fTo.value);
+}
+
+// ---------- painel de detalhe ----------
+function flist(entries, total){
+  const max = d3.max(entries, e => e[1]) || 1;
+  return '<ul class="flist">' + entries.map(([n, v]) =>
+    `<li><span class="lb" title="${fullName(n)}">${label(n)}</span><div><div class="b" style="width:${Math.max(3, v / max * 100)}%;background:${color(n.score)}"></div></div><span class="v">${v}</span></li>`).join('') + '</ul>';
+}
+function renderDetail(){
+  const box = document.getElementById('detail');
+  if (!picked) {
+    box.innerHTML = `<div class="detail"><div><h2>Escolha uma bancada</h2><p>Clique em qualquer bloco do gráfico para ver de onde vieram e para onde foram os seus deputados, e para destacar o caminho deles em todas as colunas.</p></div></div>`;
+    return;
+  }
+  if (picked.kind !== 'node') {
+    const one = picked.kind === 'dep' ? DEP.get([...picked.deps][0]) : null;
+    box.innerHTML = `<div class="detail"><div style="grid-column:1/-1;display:flex;flex-direction:column;gap:8px">
+      <h3>${picked.kind === 'dep' ? 'Deputado' : 'Faixa selecionada'}</h3>
+      <h2>${picked.title}</h2>
+      ${one ? `<div class="tl">${chips(one)}</div>` : `<p>${fmt(picked.deps.size)} deputados fizeram essa passagem. O caminho deles aparece destacado no gráfico, e a lista está logo abaixo.</p>`}
+      <p><button type="button" class="clear" id="clear">Limpar seleção</button></p></div></div>`;
+    document.getElementById('clear').onclick = () => setPick(null);
+    return;
+  }
+  const n = graph.nodes.find(x => x.L === picked.L && x.k === picked.key);
+  const p = n.k.startsWith('OUT_') ? null : posOf(n.k, n.L);
+  const from = n.targetLinks.map(l => [l.source, l.value]).sort((x, y) => y[1] - x[1]);
+  const to = n.sourceLinks.map(l => [l.target, l.value]).sort((x, y) => y[1] - x[1]);
+  const newcomers = n.fixedValue - d3.sum(from, f => f[1]);
+  const left = n.fixedValue - d3.sum(to, f => f[1]);
+  const hist = !n.k.startsWith('OUT_') && POS[n.k] ? POS[n.k].map(x => `${yr(x[0])}: ${fmtS(x[1])}${x[2] ? ' — ' + x[2] : ''}`).join('<br>') : '';
+  const members = n.k.startsWith('OUT_') ? '<p style="margin-top:8px">Inclui: ' + [...n.members].sort((x, y) => y[1] - x[1]).map(([k, v]) => `${P[k][0]} (${v})`).join(', ') + '</p>' : '';
+  const s = n.score == null ? 5 : n.score;
+  box.innerHTML = `<div class="detail">
+    <div>
+      <h3>${yrRange(n.L)}</h3>
+      <h2>${fullName(n)}</h2>
+      <p>${fmt(n.fixedValue)} deputados tomaram posse por essa bancada.</p>
+      <div class="pos"><div class="track" style="background:${document.getElementById('grad').style.background}"><div class="mark" style="left:calc(${s * 10}% - 1px)"></div></div>${fmtS(n.score)} · ${bandName(bandOf(n.score))}</div>
+      ${hist ? `<p style="font-size:13px">${hist}</p>` : ''}${members}
+      <p style="margin-top:12px"><button type="button" class="clear" id="clear">Limpar seleção</button></p>
+    </div>
+    <div><h3>Vieram de (${n.L > +fFrom.value ? yr(n.L - 1) : '—'})</h3>${from.length ? flist(from) : '<p>Fora do período exibido.</p>'}${n.L > +fFrom.value ? `<p style="margin-top:8px;font-size:13px">${fmt(newcomers)} não eram deputados na legislatura anterior.</p>` : ''}</div>
+    <div><h3>Foram para (${n.L < +fTo.value ? yr(n.L + 1) : '—'})</h3>${to.length ? flist(to) : '<p>Fora do período exibido.</p>'}${n.L < +fTo.value ? `<p style="margin-top:8px;font-size:13px">${fmt(left)} não voltaram na legislatura seguinte.</p>` : ''}</div>
+  </div>`;
+  document.getElementById('clear').onclick = () => setPick(null);
+}
+
+// ---------- tabela de posições ----------
+function renderTable(){
+  const rows = Object.keys(POS).filter(k => P[k]).map(k => ({k, cells: LEGS.map(L => {
+    const present = byLeg[L] && [...byLeg[L].values()].some(v => v[0] === k || v[1] === k);
+    return present ? scoreOf(k, L) : undefined; })}))
+    .filter(r => r.cells.some(c => c !== undefined))
+    .sort((x, y) => LEGS.findIndex((L, i) => x.cells[i] !== undefined) - LEGS.findIndex((L, i) => y.cells[i] !== undefined) || d3.mean(x.cells.filter(c => c != null)) - d3.mean(y.cells.filter(c => c != null)));
+  document.getElementById('ptable').innerHTML = `<thead><tr><th>Partido</th>${LEGS.map(L => `<th>${yr(L)}</th>`).join('')}</tr></thead><tbody>` +
+    rows.map(r => `<tr><td title="${P[r.k][1]}">${P[r.k][0]} <span class="hint">${P[r.k][1].match(/\((\d{4}.*?)\)/)?.[1] || ''}</span></td>${r.cells.map(c => c === undefined ? '<td></td>' :
+      `<td class="s" style="background:${color(c)};color:${c < 1.5 || c > 8.5 ? '#fff' : '#141414'}">${fmtS(c)}</td>`).join('')}</tr>`).join('') + '</tbody>';
+}
+
+// ---------- lista de deputados ----------
+const unknown = k => k === 'NI' || k === 'SP';
+const isInst = (a, b) => a === b || ((P[a] && P[a][3]) || []).includes(b);
+const fold = s => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase();
+const DEP = new Map();
+D.deps.forEach(d => {
+  const steps = []; d[3].forEach(s => s.slice(1).forEach(k => steps.push({L: s[0], k})));
+  const flat = []; steps.forEach(st => { if (unknown(st.k)) return; if (!flat.length || flat[flat.length - 1].k !== st.k) flat.push(st); });
+  let changes = 0, jump = 0;
+  for (let i = 1; i < flat.length; i++) if (!isInst(flat[i - 1].k, flat[i].k)) {
+    changes++;
+    const x = scoreOf(flat[i - 1].k, flat[i - 1].L), y = scoreOf(flat[i].k, flat[i].L);
+    if (x != null && y != null) jump = Math.max(jump, Math.abs(y - x));
+  }
+  DEP.set(d[0], {id: d[0], name: d[1], uf: d[2] || '', seq: d[3], sigs: flat.map(st => P[st.k][0]), changes, jump, f: fold(d[1])});
+});
+function chips(dp){
+  let html = '', prev = null;
+  dp.seq.forEach(s => {
+    if (prev !== null && s[0] > prev + 1) html += '<span class="skip">…</span>';
+    const parts = s.slice(1).map(k => `<span class="dot" style="background:${color(scoreOf(k, s[0]))}"></span>${P[k][0]}`).join(' → ');
+    html += `<span class="ch${s.length === 3 ? ' sw' : ''}" title="${yrRange(s[0])}: ${s.slice(1).map(k => P[k][1]).join(' → ')}"><span class="y">${yr(s[0]).slice(2)}</span>${parts}</span>`;
+    prev = s[0];
+  });
+  return html;
+}
+const lq = document.getElementById('l-q'), la = document.getElementById('l-a'), lb = document.getElementById('l-b'), ls = document.getElementById('l-sort');
+const SIGS = [...new Set(Object.entries(P).filter(([k]) => !unknown(k)).map(([, p]) => p[0]))].sort((x, y) => x.localeCompare(y, 'pt'));
+[la, lb].forEach(s => { s.add(new Option('qualquer partido', '')); SIGS.forEach(g => s.add(new Option(g, g))); });
+const PAGE = 60; let shown = PAGE;
+function renderList(){
+  const q = fold(lq.value.trim()), A = la.value, B = lb.value;
+  let rows = [...DEP.values()].filter(dp => {
+    if (picked && !picked.deps.has(dp.id)) return false;
+    if (q && !dp.f.includes(q)) return false;
+    if (A || B) {
+      const i = A ? dp.sigs.indexOf(A) : -1;
+      if (A && i < 0) return false;
+      if (B && dp.sigs.indexOf(B, A ? i + 1 : 0) < 0) return false;
+    }
+    return true;
+  });
+  const by = ls.value;
+  rows.sort(by === 'nome' ? (x, y) => x.name.localeCompare(y.name, 'pt')
+    : by === 'salto' ? (x, y) => y.jump - x.jump || y.changes - x.changes
+    : (x, y) => y.changes - x.changes || y.jump - x.jump);
+  const ctx = document.getElementById('l-ctx');
+  ctx.innerHTML = picked ? `<div class="ctx">Mostrando só: <b>${picked.title}</b> <button type="button" class="clear" id="l-clear">Ver todos</button></div>` : '';
+  if (picked) document.getElementById('l-clear').onclick = () => setPick(null);
+  document.getElementById('l-count').textContent = `${fmt(rows.length)} deputado${rows.length === 1 ? '' : 's'}` + (rows.length > shown ? ` · mostrando ${fmt(shown)}` : '');
+  document.getElementById('l-rows').innerHTML = rows.slice(0, shown).map(dp => `<div class="row">
+    <div><button type="button" class="nm" data-id="${dp.id}">${dp.name}</button><span class="uf">${dp.uf}</span></div>
+    <div class="tl">${chips(dp)}</div>
+    <div class="st">${dp.changes} troca${dp.changes === 1 ? '' : 's'}${dp.changes ? `<br><span class="z">salto ${fmtS(dp.jump)}</span>` : ''}</div></div>`).join('');
+  document.getElementById('l-more').hidden = rows.length <= shown;
+  document.querySelectorAll('#l-rows .nm').forEach(b => b.onclick = () => {
+    const dp = DEP.get(+b.dataset.id);
+    setPick({kind: 'dep', deps: new Set([dp.id]), title: `${dp.name} (${dp.uf})`});
+    document.querySelector('.chart').scrollIntoView({behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start'});
+  });
+}
+lq.oninput = la.onchange = lb.onchange = ls.onchange = () => { shown = PAGE; renderList(); };
+document.getElementById('l-more').onclick = () => { shown += PAGE; renderList(); };
+
+function all(){ makeColor(); draw(); renderTable(); }
+all();
+let rt; addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(draw, 150); });
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', all);
+new MutationObserver(all).observe(document.documentElement, {attributes: true, attributeFilter: ['data-theme']});
+</script>

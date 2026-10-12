@@ -26,6 +26,12 @@ Deputados cassados pelo regime militar (AI-1, AI-2 e AI-5), extraídos da seçã
 biografias oficiais em camara.leg.br por `dados/cassacoes.py`. Na página, aparecem como uma faixa escura na base de
 cada bloco de partido e marcados na lista de deputados.
 
+## Biografias
+
+Cada deputado tem link para a biografia oficial na Câmara. O link para a Wikipédia vem do Wikidata (propriedade
+P7480, código de deputado federal) e, para cassados sem esse vínculo, de uma busca na Wikipédia aceita só quando
+título, estado e menção à cassação conferem (`dados/wikipedia.py`).
+
 ## Posição ideológica (0 = esquerda, 10 = direita)
 
 | Período | Fonte | O que mede |
@@ -51,6 +57,7 @@ python3 fetch_hist.py   # baixa o histórico de quem trocou de partido
 python3 process.py      # padroniza siglas por época e gera ../dados.json
 python3 posicoes.py     # junta BLS e V-Party e gera ../posicoes.json
 python3 cassacoes.py    # lê as cassações nas biografias da Câmara e gera ../cassacoes.json
+python3 wikipedia.py    # liga deputados a artigos da Wikipédia (Wikidata + busca) e gera ../wikipedia.json
 cd ..
 python3 build.py        # gera index.html
 ```

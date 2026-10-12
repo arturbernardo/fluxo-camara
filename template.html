@@ -113,6 +113,9 @@ input[type=search]{font:inherit;font-size:14px;color:var(--ink);background:var(-
 @media (max-width:760px){.row{grid-template-columns:1fr}}
 .row .nm{all:unset;cursor:pointer;font-weight:600;font-size:14px;line-height:1.3}
 .row .nm:hover,.row .nm:focus-visible{text-decoration:underline;color:var(--accent)}
+.links{display:block;font-size:12px;margin-top:2px}
+.links a{color:var(--accent);text-decoration:none}
+.links a:hover,.links a:focus-visible{text-decoration:underline}
 .row .uf{font-size:12px;color:var(--muted);font-weight:400;margin-left:4px}
 .tl{display:flex;flex-wrap:wrap;gap:4px 6px;align-items:center}
 .ch{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;border:1px solid var(--grid);border-radius:4px;padding:1px 6px;background:var(--surface);white-space:nowrap}
@@ -198,6 +201,7 @@ button.more{align-self:flex-start;font:inherit;font-size:13px;background:var(--s
 <script id="data" type="application/json">/*DATA*/</script>
 <script id="pos" type="application/json">/*POS*/</script>
 <script id="cass" type="application/json">/*CASS*/</script>
+<script id="wiki" type="application/json">/*WIKI*/</script>
 <script>
 const D = JSON.parse(document.getElementById('data').textContent);
 const P = D.parties, LEGS = D.legs.map(l => l[0]), YEAR = Object.fromEntries(D.legs);
@@ -278,6 +282,10 @@ const fmtS = s => s == null ? '—' : s.toLocaleString('pt-BR', {minimumFraction
 // cassações (biografias oficiais da Câmara, dados/cassacoes.py): id -> [[legislatura, ano, ato], ...]
 const CASS = JSON.parse(document.getElementById('cass').textContent);
 const cassIn = (id, L) => (CASS[id] || []).find(e => e[0] === L);
+// artigos da Wikipédia (dados/wikipedia.py): id -> título
+const WIKI = JSON.parse(document.getElementById('wiki').textContent);
+const bioLinks = id => `<span class="links"><a href="https://www.camara.leg.br/deputados/${id}/biografia" target="_blank" rel="noopener">biografia na Câmara</a>` +
+  (WIKI[id] ? ` · <a href="https://pt.wikipedia.org/wiki/${encodeURIComponent(WIKI[id])}" target="_blank" rel="noopener">Wikipédia</a>` : '') + '</span>';
 const actName = a => a === 'outro' ? 'ato não especificado' : a;
 
 // índice: legislatura -> id -> [início, fim]
@@ -443,7 +451,7 @@ function renderDetail(){
     const one = picked.kind === 'dep' ? DEP.get([...picked.deps][0]) : null;
     box.innerHTML = `<div class="detail"><div style="grid-column:1/-1;display:flex;flex-direction:column;gap:8px">
       <h3>${picked.kind === 'dep' ? 'Deputado' : picked.kind === 'cass' ? 'Mandatos cassados' : 'Faixa selecionada'}</h3>
-      <h2>${picked.title}</h2>
+      <h2>${picked.title}</h2>${one ? bioLinks(one.id) : ''}
       ${one ? `<div class="tl">${chips(one)}</div>` : (picked.kind === 'cass' ? `<p>${fmt(picked.deps.size)} deputados tiveram o mandato cassado e os direitos políticos suspensos durante a legislatura. Os nomes estão na lista logo abaixo.</p>` : `<p>${fmt(picked.deps.size)} deputados fizeram essa passagem. O caminho deles aparece destacado no gráfico, e a lista está logo abaixo.</p>`)}
       <p><button type="button" class="clear" id="clear">Limpar seleção</button></p></div></div>`;
     document.getElementById('clear').onclick = () => setPick(null);
@@ -547,7 +555,7 @@ function renderList(){
   if (picked) document.getElementById('l-clear').onclick = () => setPick(null);
   document.getElementById('l-count').textContent = `${fmt(rows.length)} deputado${rows.length === 1 ? '' : 's'}` + (rows.length > shown ? ` · mostrando ${fmt(shown)}` : '');
   document.getElementById('l-rows').innerHTML = rows.slice(0, shown).map(dp => `<div class="row">
-    <div><button type="button" class="nm" data-id="${dp.id}">${dp.name}</button><span class="uf">${dp.uf}</span></div>
+    <div><button type="button" class="nm" data-id="${dp.id}">${dp.name}</button><span class="uf">${dp.uf}</span>${bioLinks(dp.id)}</div>
     <div class="tl">${chips(dp)}</div>
     <div class="st">${dp.changes} troca${dp.changes === 1 ? '' : 's'}${dp.changes ? `<br><span class="z">salto ${fmtS(dp.jump)}</span>` : ''}</div></div>`).join('');
   document.getElementById('l-more').hidden = rows.length <= shown;

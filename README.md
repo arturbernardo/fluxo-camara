@@ -20,6 +20,16 @@ representação profissional (eleitos por delegados de sindicatos), separados pe
 no texto da biografia e da Wikipédia; na Constituinte de 1933, PRP e Partido Democrático paulistas aparecem como Chapa
 Única por São Paulo Unido. Cerca de um quarto dos deputados de 1933–37 continua sem partido. Entre 1937 e 1946 o Congresso esteve fechado (Estado Novo).
 
+## Quem podia votar (eleitorado, 1872–2026)
+
+**Página:** https://arturbernardo.github.io/fluxo-camara/eleitorado/
+
+Eleitorado e comparecimento como % da população, de 1872 a 2026, ao lado do analfabetismo de pessoas com 15 anos
+ou mais. Fontes: TSE via Ipeadata (eleitorado 1910–2026, comparecimento 1945–2024), censos do IBGE via Ipeadata
+(população), Wikipédia (1872 e 1881, artigo "Lei Saraiva"; 1894–1930, votos dos dois principais candidatos
+a presidente, citando Walter Costa Porto), IPEA TD 639 (analfabetismo 1900–1991) e Atlas do Desenvolvimento
+Humano via Ipeadata (2000–2022). Os dados são gerados por `eleitorado/dados.py` e a página por `eleitorado/build.py`.
+
 ## Fonte
 
 [API de Dados Abertos da Câmara dos Deputados](https://dadosabertos.camara.leg.br): deputados por

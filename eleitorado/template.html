@@ -1,0 +1,266 @@
+<title>Quem podia votar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;500;600;800&family=Newsreader:opsz,wght@6..72,400;6..72,500&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#f4f5f3; --surface:#fbfbfa; --ink:#14181b; --ink2:#4b5257; --muted:#868c8f;
+  --grid:#dfe2df; --axis:#b9bdb8; --accent:#0d5c48;
+  --s-e:#1f5fa8; --s-c:#c4661d; --s-a:#6b5a8e; --band:#e9ebe7; --band2:#efe9e2;
+  --sans:"Libre Franklin",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --serif:"Newsreader",Georgia,"Times New Roman",serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  color-scheme:dark;
+  --bg:#101315; --surface:#171b1e; --ink:#eef0ee; --ink2:#b7bdbd; --muted:#80878a;
+  --grid:#272c2f; --axis:#3a4044; --accent:#4fbf9c;
+  --s-e:#7fa8ee; --s-c:#f0a050; --s-a:#b3a3d9; --band:#1f2427; --band2:#26221f;
+}}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#101315; --surface:#171b1e; --ink:#eef0ee; --ink2:#b7bdbd; --muted:#80878a;
+  --grid:#272c2f; --axis:#3a4044; --accent:#4fbf9c;
+  --s-e:#7fa8ee; --s-c:#f0a050; --s-a:#b3a3d9; --band:#1f2427; --band2:#26221f;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;padding-inline:20px;padding-block:0 56px}
+.wrap{max-width:1100px;margin:0 auto;display:flex;flex-direction:column;gap:28px}
+header{padding-top:36px;display:flex;flex-direction:column;gap:10px}
+.eyebrow{font-size:12px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:600}
+h1{font-weight:800;font-size:clamp(32px,4.8vw,52px);line-height:1.02;letter-spacing:-.02em;margin:0;text-wrap:balance}
+h2{font-weight:800;font-size:22px;letter-spacing:-.01em;margin:0;text-wrap:balance}
+.lede{font-family:var(--serif);font-size:18px;line-height:1.55;color:var(--ink2);max-width:68ch;margin:0}
+.alt{margin:0;font-size:14px}
+.alt a,a{color:var(--accent)}
+.alt a{font-weight:600}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--grid);border:1px solid var(--grid);border-radius:6px;overflow:hidden}
+@media (max-width:720px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.stat{background:var(--surface);padding:12px 14px;display:flex;flex-direction:column;gap:2px}
+.stat .y{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.stat b{font-family:var(--mono);font-weight:500;font-size:26px;font-variant-numeric:tabular-nums}
+.stat span{font-size:12.5px;color:var(--ink2);line-height:1.3}
+section{display:flex;flex-direction:column;gap:10px}
+section>p{margin:0;color:var(--ink2);max-width:72ch;font-size:15px}
+.panel{background:var(--surface);border:1px solid var(--grid);border-radius:8px;padding:14px 14px 8px}
+.scroll{overflow-x:auto}
+svg text{fill:var(--ink2);font-family:var(--sans)}
+.axis-t{font-size:11.5px;fill:var(--muted);font-variant-numeric:tabular-nums}
+.lbl{font-size:12.5px;font-weight:600}
+.ev{font-size:11px;fill:var(--ink2)}
+.evline{stroke:var(--axis);stroke-dasharray:2 3}
+.bandlbl{font-size:11px;fill:var(--muted);font-style:italic}
+.cross{stroke:var(--ink2);stroke-width:1;opacity:.5}
+#tip{position:fixed;pointer-events:none;z-index:9;background:var(--ink);color:var(--bg);font-size:12.5px;line-height:1.45;padding:8px 10px;border-radius:5px;max-width:300px;opacity:0;transition:opacity .08s}
+#tip .k{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:0}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;color:var(--ink2)}
+.legend i{display:inline-block;width:18px;height:3px;border-radius:2px;margin-right:6px;vertical-align:4px}
+.legend i.dash{background:repeating-linear-gradient(90deg,var(--s-c) 0 5px,transparent 5px 8px)!important}
+.marcos{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.marco{border-top:2px solid var(--grid);padding-top:8px}
+.marco .y{font-family:var(--mono);font-size:13px;color:var(--accent);font-weight:500}
+.marco h3{font-size:14.5px;margin:2px 0 4px}
+.marco p{margin:0;font-size:13.5px;color:var(--ink2)}
+details{border-top:1px solid var(--grid);padding-top:10px}
+summary{cursor:pointer;font-weight:600;font-size:14px}
+table{border-collapse:collapse;font-size:12.5px;width:100%}
+th,td{padding:4px 8px;border-bottom:1px solid var(--grid);text-align:right;white-space:nowrap}
+th{color:var(--muted);font-weight:600;font-size:11.5px}
+td:first-child,th:first-child{text-align:left}
+td.src{text-align:left;color:var(--muted);white-space:normal;font-size:11.5px}
+.note{font-size:13px;color:var(--muted);max-width:90ch;display:flex;flex-direction:column;gap:6px}
+.note p{margin:0}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div id="tip" role="status" aria-live="polite"></div>
+<div class="wrap">
+<header>
+  <div class="eyebrow">Brasil · 1872 – 2026</div>
+  <h1>Quem podia votar</h1>
+  <p class="lede">Por mais de um século, a maioria dos brasileiros ficou fora das urnas: pela renda no Império, pela exigência de saber ler a partir de 1881 e, até 1932, por serem mulheres. Esta página mostra o eleitorado e o comparecimento como parcela da população, ao lado do analfabetismo, de 1872 até hoje.</p>
+  <p class="alt"><a href="https://arturbernardo.github.io/fluxo-camara/">Ver também o fluxo dos deputados entre partidos</a></p>
+</header>
+
+<div class="stats" id="stats"></div>
+
+<section>
+  <h2>Eleitores e votantes, em % da população</h2>
+  <p>Eleitorado: pessoas aptas a votar (no Império, os “votantes” de paróquia). Comparecimento: quem de fato votou. Entre 1894 e 1930, o comparecimento é aproximado pelos votos nos dois principais candidatos a presidente (linha tracejada). Passe o mouse sobre o gráfico para ver os valores de cada eleição.</p>
+  <div class="legend"><span><i style="background:var(--s-e)"></i>Eleitorado</span><span><i style="background:var(--s-c)"></i>Comparecimento</span><span><i class="dash"></i>Comparecimento aproximado (1894–1930)</span></div>
+  <div class="panel scroll"><svg id="ch1" role="img" aria-label="Eleitorado e comparecimento como porcentagem da população, 1872 a 2026"></svg></div>
+</section>
+
+<section>
+  <h2>Analfabetismo entre pessoas de 15 anos ou mais</h2>
+  <p>De 1881 a 1985, saber ler era condição para votar. Em 1950, metade dos adultos não sabia ler: estava, por lei, fora do eleitorado.</p>
+  <div class="panel scroll"><svg id="ch2" role="img" aria-label="Taxa de analfabetismo entre pessoas de 15 anos ou mais, 1900 a 2022"></svg></div>
+</section>
+
+<section>
+  <h2>Os marcos</h2>
+  <div class="marcos" id="marcos"></div>
+</section>
+
+<details>
+  <summary>Tabela com todos os valores e fontes</summary>
+  <div class="scroll" style="margin-top:10px"><table id="tab"></table></div>
+</details>
+
+<div class="note">
+  <p><b>Fontes.</b> Eleitorado (1910–2026) e comparecimento (1945–2024): TSE, via <a href="http://www.ipeadata.gov.br/">Ipeadata</a> (séries ELEMUN e COMP). População: censos do IBGE via Ipeadata, interpolada entre censos (e projetada depois de 2022 com o ritmo de 2010–2022). 1872 e 1881: artigo “Lei Saraiva” da Wikipédia. 1894–1930: soma dos votos dos dois principais candidatos, segundo os artigos da Wikipédia sobre cada eleição presidencial (que citam Walter Costa Porto, <i>O voto no Brasil</i>). Analfabetismo: censos do IBGE, em IPEA, Texto para Discussão 639 (1999), tabela 1, para 1900–1991; Atlas do Desenvolvimento Humano/IBGE, via Ipeadata, para 2000–2022.</p>
+  <p><b>Cuidados.</b> As porcentagens usam a população total, não a adulta; a idade mínima mudou (21 anos até 1934, 18 até 1988, 16 depois). As eleições não são do mesmo tipo: presidenciais, gerais e municipais aparecem juntas. A série do TSE mostra uma queda do eleitorado em 1996, ano de eleição só municipal, cuja causa não verifiquei. Até 1930, os números são frágeis: fraude e eleições “a bico de pena” eram comuns. Não houve eleições nacionais entre 1937 e 1945 (Estado Novo); na ditadura de 1964–1985 houve eleições legislativas e municipais, mas o presidente era escolhido indiretamente.</p>
+</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script id="data" type="application/json">/*DATA*/</script>
+<script>
+const D = JSON.parse(document.getElementById('data').textContent);
+const P = D.pontos, A = D.analfabetismo;
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const pct = v => v == null ? '—' : v.toLocaleString('pt-BR', {maximumFractionDigits: v < 10 ? 1 : 0}) + '%';
+const num = v => v == null ? '—' : Math.round(v).toLocaleString('pt-BR');
+
+const BANDS = [
+  {a: 1881, b: 1985.4, t: 'analfabetos proibidos de votar (1881–1985)', y: 'top', cls: 'band2'},
+  {a: 1937.9, b: 1945.9, t: 'Estado Novo: sem eleições', y: 'mid', cls: 'band'},
+  {a: 1964.3, b: 1985, t: 'ditadura: presidente indireto', y: 'mid', cls: 'band'},
+];
+const EVENTS = [
+  {y: 1881, t: 'Lei Saraiva'}, {y: 1889.9, t: 'República'}, {y: 1932, t: 'voto feminino e secreto'},
+  {y: 1985.4, t: 'voto dos analfabetos'}, {y: 1988.8, t: 'voto aos 16 anos'},
+];
+const MARCOS = [
+  ['1824', 'Voto censitário', 'A Constituição do Império exige renda mínima para votar. Analfabetos com renda votam; mulheres e escravizados, não.'],
+  ['1881', 'Lei Saraiva', 'Eleição direta, renda mínima maior e exigência de saber ler. O eleitorado cai de mais de 1 milhão para cerca de 145 mil.'],
+  ['1891', 'Primeira Constituição republicana', 'Acaba a exigência de renda, mas mantém a proibição do voto de analfabetos e não inclui as mulheres. O voto é aberto.'],
+  ['1932', 'Código Eleitoral', 'Cria a Justiça Eleitoral, o voto secreto e o voto feminino. A Constituição de 1934 confirma o voto feminino e baixa a idade mínima de 21 para 18 anos.'],
+  ['1937–1945', 'Estado Novo', 'Congresso fechado e nenhuma eleição nacional.'],
+  ['1945', 'Redemocratização', 'Primeira eleição com o eleitorado ampliado: o comparecimento passa de 13% da população.'],
+  ['1964–1985', 'Ditadura', 'Eleições legislativas e municipais continuam, mas o presidente e, por anos, governadores e prefeitos das capitais são escolhidos indiretamente.'],
+  ['1985', 'Voto dos analfabetos', 'A Emenda Constitucional nº 25 dá aos analfabetos o direito de votar, mais de cem anos depois da Lei Saraiva.'],
+  ['1988', 'Constituição Cidadã', 'Voto facultativo aos 16 e 17 anos, aos analfabetos e a quem tem mais de 70; obrigatório dos 18 aos 70.'],
+];
+
+const tip = document.getElementById('tip');
+function showTip(e, html){ tip.innerHTML = html; tip.style.opacity = 1; const x = Math.min(e.clientX + 14, innerWidth - tip.offsetWidth - 8), y = Math.min(e.clientY + 14, innerHeight - tip.offsetHeight - 8); tip.style.left = x + 'px'; tip.style.top = y + 'px'; }
+function hideTip(){ tip.style.opacity = 0; }
+
+// segmentos: não liga pontos separados por mais de `gap` anos
+function segments(rows, key, gap){
+  const out = []; let cur = [];
+  rows.filter(r => r[key] != null).forEach(r => { if (cur.length && r.ano - cur[cur.length - 1].ano > gap) { out.push(cur); cur = []; } cur.push(r); });
+  if (cur.length) out.push(cur);
+  return out;
+}
+
+function frame(svgId, H, ymax, ticks){
+  const box = document.getElementById(svgId).parentNode;
+  const W = Math.max(720, box.clientWidth - 28), m = {t: 34, r: 92, b: 26, l: 40};
+  const x = d3.scaleLinear().domain([1870, 2030]).range([m.l, W - m.r]);
+  const y = d3.scaleLinear().domain([0, ymax]).range([H - m.b, m.t]);
+  const svg = d3.select('#' + svgId).attr('viewBox', `0 0 ${W} ${H}`).attr('width', W).attr('height', H);
+  svg.selectAll('*').remove();
+  BANDS.forEach(b => {
+    svg.append('rect').attr('x', x(b.a)).attr('width', x(b.b) - x(b.a)).attr('y', m.t).attr('height', H - m.b - m.t).attr('fill', css('--' + b.cls));
+  });
+  ticks.forEach(v => { svg.append('line').attr('x1', m.l).attr('x2', W - m.r).attr('y1', y(v)).attr('y2', y(v)).attr('stroke', css('--grid'));
+    svg.append('text').attr('class', 'axis-t').attr('x', m.l - 6).attr('y', y(v) + 4).attr('text-anchor', 'end').text(v + '%'); });
+  d3.range(1880, 2031, 20).forEach(v => svg.append('text').attr('class', 'axis-t').attr('x', x(v)).attr('y', H - 8).attr('text-anchor', 'middle').text(v));
+  svg.append('line').attr('x1', m.l).attr('x2', W - m.r).attr('y1', y(0)).attr('y2', y(0)).attr('stroke', css('--axis'));
+  return {svg, x, y, W, H, m};
+}
+
+function drawMain(){
+  const f = frame('ch1', 420, 80, [0, 20, 40, 60, 80]);
+  const {svg, x, y, m, W, H} = f;
+  BANDS.forEach((b, i) => svg.append('text').attr('class', 'bandlbl').attr('x', x(b.a) + 4).attr('y', b.y === 'top' ? m.t - 6 : m.t + 14 + (i === 1 ? 0 : 14)).text(b.t));
+  EVENTS.forEach((ev, i) => {
+    svg.append('line').attr('class', 'evline').attr('x1', x(ev.y)).attr('x2', x(ev.y)).attr('y1', m.t + 20).attr('y2', y(0));
+    svg.append('text').attr('class', 'ev').attr('transform', `translate(${x(ev.y) + 3},${y(0) - 6}) rotate(-90)`).text(ev.t);
+  });
+  const line = d3.line().x(d => x(d.ano)).y(d => y(d.v));
+  // eleitorado
+  segments(P, 'pct_e', 12).forEach(s => {
+    svg.append('path').attr('d', line(s.map(d => ({ano: d.ano, v: d.pct_e})))).attr('fill', 'none').attr('stroke', css('--s-e')).attr('stroke-width', 2);
+  });
+  // comparecimento: aproximado (tracejado) e TSE
+  const aprox = P.filter(d => d.aprox_c && d.pct_c != null), tse = P.filter(d => !d.aprox_c && d.pct_c != null);
+  segments(aprox, 'pct_c', 12).forEach(s => svg.append('path').attr('d', line(s.map(d => ({ano: d.ano, v: d.pct_c})))).attr('fill', 'none').attr('stroke', css('--s-c')).attr('stroke-width', 2).attr('stroke-dasharray', '5 3'));
+  segments(tse, 'pct_c', 12).forEach(s => svg.append('path').attr('d', line(s.map(d => ({ano: d.ano, v: d.pct_c})))).attr('fill', 'none').attr('stroke', css('--s-c')).attr('stroke-width', 2));
+  // pontos
+  P.forEach(d => {
+    if (d.pct_e != null) svg.append('circle').attr('cx', x(d.ano)).attr('cy', y(d.pct_e)).attr('r', 3).attr('fill', css('--s-e')).attr('stroke', css('--surface')).attr('stroke-width', 1.5);
+    if (d.pct_c != null) svg.append('circle').attr('cx', x(d.ano)).attr('cy', y(d.pct_c)).attr('r', 3).attr('fill', css('--s-c')).attr('stroke', css('--surface')).attr('stroke-width', 1.5);
+  });
+  // rótulos diretos no fim e destaques
+  const last = P[P.length - 1], lastC = [...P].reverse().find(d => d.pct_c != null);
+  svg.append('text').attr('class', 'lbl').attr('x', x(last.ano) + 8).attr('y', y(last.pct_e) + 4).attr('fill', css('--s-e')).text('Eleitorado ' + pct(last.pct_e));
+  svg.append('text').attr('class', 'lbl').attr('x', x(lastC.ano) + 8).attr('y', y(lastC.pct_c) + 4).attr('fill', css('--s-c')).text('Votaram ' + pct(lastC.pct_c));
+  const p1872 = P.find(d => d.ano === 1872), p1881 = P.find(d => d.ano === 1881);
+  svg.append('text').attr('class', 'ev').attr('x', x(1872) + 6).attr('y', y(p1872.pct_e) - 6).text(pct(p1872.pct_e) + ' em 1872');
+  svg.append('text').attr('class', 'ev').attr('x', x(1881) + 10).attr('y', y(p1881.pct_e) - 22).text(pct(p1881.pct_e) + ' em 1881');
+  hover(svg, f, d => [
+    d.pct_e != null ? `<span class="k" style="background:var(--s-e)"></span>Eleitorado: <b>${pct(d.pct_e)}</b> (${num(d.eleitorado)})` : null,
+    d.pct_c != null ? `<span class="k" style="background:var(--s-c)"></span>${d.aprox_c ? 'Votos nos 2 principais candidatos' : 'Comparecimento'}: <b>${pct(d.pct_c)}</b> (${num(d.comparecimento)})` : null,
+    `População ${d.pop_censo ? '(censo)' : '(estimada)'}: ${num(d.populacao)}`,
+  ], P);
+}
+
+function drawAnalf(){
+  const f = frame('ch2', 260, 80, [0, 20, 40, 60, 80]);
+  const {svg, x, y, m} = f;
+  svg.append('text').attr('class', 'bandlbl').attr('x', x(1881) + 4).attr('y', m.t - 6).text('analfabetos proibidos de votar (1881–1985)');
+  const line = d3.line().x(d => x(d.ano)).y(d => y(d.pct));
+  svg.append('path').attr('d', line(A)).attr('fill', 'none').attr('stroke', css('--s-a')).attr('stroke-width', 2);
+  A.forEach(d => svg.append('circle').attr('cx', x(d.ano)).attr('cy', y(d.pct)).attr('r', 3).attr('fill', css('--s-a')).attr('stroke', css('--surface')).attr('stroke-width', 1.5));
+  const l = A[A.length - 1], f1 = A[0];
+  svg.append('text').attr('class', 'lbl').attr('x', x(l.ano) + 8).attr('y', y(l.pct) + 4).attr('fill', css('--s-a')).text('Analfabetos ' + pct(l.pct));
+  svg.append('text').attr('class', 'ev').attr('x', x(f1.ano) + 6).attr('y', y(f1.pct) - 8).text(pct(f1.pct) + ' em 1900');
+  const a50 = A.find(d => d.ano === 1950);
+  svg.append('text').attr('class', 'ev').attr('x', x(1950) + 6).attr('y', y(a50.pct) - 8).text(pct(a50.pct) + ' em 1950');
+  hover(svg, f, d => [`<span class="k" style="background:var(--s-a)"></span>Analfabetos (15 anos ou mais): <b>${pct(d.pct)}</b>`, `<span style="opacity:.75">${d.fonte}</span>`], A);
+}
+
+function hover(svg, f, lines, rows){
+  const {x, m, W, H} = f;
+  const cross = svg.append('line').attr('class', 'cross').attr('y1', m.t).attr('y2', H - m.b).style('display', 'none');
+  svg.append('rect').attr('x', m.l).attr('y', m.t).attr('width', W - m.r - m.l).attr('height', H - m.b - m.t).attr('fill', 'transparent')
+    .on('mousemove', e => {
+      const [mx] = d3.pointer(e); const yr = x.invert(mx);
+      const d = rows.reduce((a, b) => Math.abs(b.ano - yr) < Math.abs(a.ano - yr) ? b : a);
+      if (Math.abs(d.ano - yr) > 6) { cross.style('display', 'none'); hideTip(); return; }
+      cross.style('display', null).attr('x1', x(d.ano)).attr('x2', x(d.ano));
+      showTip(e, `<b>${d.ano}</b><br>` + lines(d).filter(Boolean).join('<br>'));
+    })
+    .on('mouseleave', () => { cross.style('display', 'none'); hideTip(); });
+}
+
+function stats(){
+  const g = a => P.find(d => d.ano === a);
+  const items = [
+    [1872, pct(g(1872).pct_e), 'da população era eleitora (votantes de paróquia, com renda mínima)'],
+    [1881, pct(g(1881).pct_c), 'votou na primeira eleição depois da Lei Saraiva'],
+    [1945, pct(g(1945).pct_c), 'votou na redemocratização, já com voto feminino'],
+    [2022, pct(g(2022).pct_c), 'votou na eleição presidencial de 2022'],
+  ];
+  document.getElementById('stats').innerHTML = items.map(([y, v, t]) => `<div class="stat"><span class="y">${y}</span><b>${v}</b><span>${t}</span></div>`).join('');
+}
+function marcos(){
+  document.getElementById('marcos').innerHTML = MARCOS.map(([y, h, t]) => `<div class="marco"><div class="y">${y}</div><h3>${h}</h3><p>${t}</p></div>`).join('');
+}
+function table(){
+  const aMap = Object.fromEntries(A.map(a => [a.ano, a.pct]));
+  const anos = [...new Set([...P.map(p => p.ano), ...A.map(a => a.ano)])].sort((a, b) => a - b);
+  document.getElementById('tab').innerHTML = '<thead><tr><th>Ano</th><th>Eleitorado</th><th>% pop.</th><th>Votaram</th><th>% pop.</th><th>População</th><th>Analfab. 15+</th><th>Fontes</th></tr></thead><tbody>' +
+    anos.map(a => { const p = P.find(d => d.ano === a) || {};
+      return `<tr><td>${a}</td><td>${num(p.eleitorado)}</td><td>${pct(p.pct_e)}</td><td>${num(p.comparecimento)}${p.aprox_c ? '*' : ''}</td><td>${pct(p.pct_c)}</td><td>${p.populacao ? num(p.populacao) + (p.pop_censo ? '' : ' (est.)') : '—'}</td><td>${aMap[a] != null ? pct(aMap[a]) : '—'}</td><td class="src">${[p.fonte_e, p.fonte_c].filter(Boolean).filter((v, i, s) => s.indexOf(v) === i).join('; ')}</td></tr>`; }).join('') +
+    '</tbody>';
+}
+
+function all(){ drawMain(); drawAnalf(); }
+stats(); marcos(); table(); all();
+let rt; addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(all, 150); });
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', all);
+new MutationObserver(all).observe(document.documentElement, {attributes: true, attributeFilter: ['data-theme']});
+</script>

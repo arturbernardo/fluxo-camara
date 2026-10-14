@@ -7,7 +7,7 @@ estaduais e a mesma sigla mudava de sentido conforme o estado, então a chave é
 Lê ../dados.json, deputados_1930_1946.json e biografias.json (gerados por historico1933 na primeira execução)
 e gera ../dados1933.json no mesmo formato de dados.json.
 """
-import html, json, os, re, time, urllib.request
+import html, json, os, re, time, urllib.parse, urllib.request
 from concurrent.futures import ThreadPoolExecutor
 # siglas de 1946–51: mesma padronização de process.py para o período 1945–65
 CANON_45 = {"PSD": "PSD45", "PTB": "PTB45", "PR": "PR45", "PST": "PST45", "PTN": "PTN45", "PDC": "PDC45",
@@ -60,6 +60,16 @@ else:
 cache = json.load(open("biografias.json", encoding="utf-8")) if os.path.exists("biografias.json") else {}
 ids = {r["id"] for L in (36, 37, 38) for r in api.get(L, [])} | \
       {i for i, _, _, seq in dados["deps"] if any(s[0] in (39, 40, 41) for s in seq)}
+# deputados que não estão em nenhuma lista da API (ex.: comunistas de 1946, cassados em 1948): todos os códigos
+# de deputado federal registrados no Wikidata (P7480) que ainda não estão na base; só ficam os que tiveram
+# mandato entre 1933 e 1951 segundo a biografia
+q = "SELECT ?id WHERE { ?item wdt:P7480 ?id . }"
+req = urllib.request.Request("https://query.wikidata.org/sparql?" + urllib.parse.urlencode({"query": q, "format": "json"}),
+                             headers={"User-Agent": "fluxo-camara/1.0 (https://github.com/arturbernardo/fluxo-camara)"})
+na_base = {d[0] for d in dados["deps"]}
+wd = {int(b["id"]["value"]) for b in json.load(urllib.request.urlopen(req, timeout=120))["results"]["bindings"]
+      if b["id"]["value"].isdigit()}
+ids |= wd - na_base
 falta = [i for i in ids if str(i) not in cache]
 with ThreadPoolExecutor(4) as ex:
     for k, v in ex.map(baixa_bio, falta):
@@ -165,13 +175,46 @@ for i, por_leg in novos.items():
                            "NA", SUCESSORES_45]
     # a classificação ideológica de 1933–37 fica em aberto (sem medida nem classificação provisória)
 
+# nome dos deputados que não estão em nenhuma lista (vindos do Wikidata): dados cadastrais da API
+def cadastro(i):
+    u = f"https://dadosabertos.camara.leg.br/api/v2/deputados/{i}"
+    for t in range(4):
+        try:
+            s = json.load(urllib.request.urlopen(urllib.request.Request(u, headers={"Accept": "application/json"}), timeout=60))["dados"]
+            return i, (s["ultimoStatus"].get("nomeEleitoral") or s["ultimoStatus"].get("nome") or s.get("nomeCivil"), s["ultimoStatus"].get("siglaUf"))
+        except Exception:
+            time.sleep(2 + 2 * t)
+    return i, (None, None)
+
+
+sem_nome = [i for i, por_leg in novos.items() if por_leg and i not in nomes and i not in {d[0] for d in dados["deps"]}]
+with ThreadPoolExecutor(4) as ex:
+    for i, (n, uf) in ex.map(cadastro, sem_nome):
+        if n:
+            nomes[i] = n.upper()
+        if uf:
+            ufs.setdefault(i, uf)
+print("deputados acrescentados pelo Wikidata:", len(sem_nome))
+
 deps = {d[0]: d for d in dados["deps"]}
 for i, por_leg in novos.items():
+    if not por_leg:
+        continue
     pre = [[L, por_leg[L]] for L in sorted(por_leg)]
     if i in deps:
         deps[i][3] = pre + deps[i][3]
     else:
         deps[i] = [i, nomes.get(i, f"Deputado #{i}"), ufs.get(i), pre]
+
+# cassação dos eleitos pelo PCB (Lei nº 211, de 7/1/1948, depois do cancelamento do registro do partido pelo TSE)
+cass48 = {}
+for i in novos:
+    t = cache.get(str(i)) or ""
+    j = t.find("Perdas de Mandato:")
+    if j >= 0 and re.search(r"Lei n[ºo°]\s*211|registro do Partido Comunista", t[j:j + 600]):
+        cass48[str(i)] = [[38, 1948, "Lei 211/1948"]]
+json.dump(cass48, open("../cassacoes1933.json", "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
+print("cassados em 1948 (PCB):", len(cass48))
 
 out = {"legs": [[36, "1933"], [37, "1935"], [38, "1946"]] + dados["legs"],
        "ends": {"36": "1935", "37": "1937", "38": "1951"},

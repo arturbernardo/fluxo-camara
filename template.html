@@ -475,7 +475,7 @@ function renderDetail(){
     box.innerHTML = `<div class="detail"><div style="grid-column:1/-1;display:flex;flex-direction:column;gap:8px">
       <h3>${picked.kind === 'dep' ? 'Deputado' : picked.kind === 'cass' ? 'Mandatos cassados' : 'Faixa selecionada'}</h3>
       <h2>${picked.title}</h2>${one ? persBadges(one.id) + bioLinks(one.id) + persText(one.id) : ''}
-      ${one ? `<div class="tl">${chips(one)}</div>` : (picked.kind === 'cass' ? `<p>${fmt(picked.deps.size)} deputados tiveram o mandato cassado e os direitos políticos suspensos durante a legislatura. Os nomes estão na lista logo abaixo.</p>` : `<p>${fmt(picked.deps.size)} deputados fizeram essa passagem. O caminho deles aparece destacado no gráfico, e a lista está logo abaixo.</p>`)}
+      ${one ? `<div class="tl">${chips(one)}</div>` : (picked.kind === 'cass' ? `<p>${fmt(picked.deps.size)} deputados tiveram o mandato cassado durante a legislatura. Passe o mouse sobre a marca “cassado” na lista para ver o ato.</p>` : `<p>${fmt(picked.deps.size)} deputados fizeram essa passagem. O caminho deles aparece destacado no gráfico, e a lista está logo abaixo.</p>`)}
       <p><button type="button" class="clear" id="clear">Limpar seleção</button></p></div></div>`;
     document.getElementById('clear').onclick = () => setPick(null);
     return;
@@ -546,7 +546,7 @@ function chips(dp){
     const parts = s.slice(1).map(k => `<span class="dot" style="background:${color(scoreOf(k, s[0]))}"></span>${P[k][0]}`).join(' → ');
     html += `<span class="ch${s.length === 3 ? ' sw' : ''}" title="${yrRange(s[0])}: ${s.slice(1).map(k => P[k][1]).join(' → ')}"><span class="y">${yr(s[0]).slice(2)}</span>${parts}</span>`;
     const c = cassIn(dp.id, s[0]);
-    if (c) html += `<span class="ch cass" title="Mandato cassado e direitos políticos suspensos">cassado ${c[1] || ''} · ${actName(c[2])}</span>`;
+    if (c) html += `<span class="ch cass" title="${c[2] === 'Lei 211/1948' ? 'Mandato extinto pela Lei nº 211/1948, após o cancelamento do registro do PCB' : 'Mandato cassado e direitos políticos suspensos (' + actName(c[2]) + ')'}">cassado ${c[1] || ''} · ${actName(c[2])}</span>`;
     prev = s[0];
   });
   return html;

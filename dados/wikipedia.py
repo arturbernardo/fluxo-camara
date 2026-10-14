@@ -6,7 +6,7 @@
 
 Gera ../wikipedia.json: {id: título do artigo}.
 """
-import json, re, time, unicodedata, urllib.parse, urllib.request
+import json, os, re, time, unicodedata, urllib.parse, urllib.request
 
 UA = {"User-Agent": "fluxo-camara/1.0 (https://github.com/arturbernardo/fluxo-camara)"}
 UF = {"AC": "Acre", "AL": "Alagoas", "AM": "Amazonas", "AP": "Amapá", "BA": "Bahia", "CE": "Ceará",
@@ -30,19 +30,43 @@ def wiki(params):
     return get("https://pt.wikipedia.org/w/api.php?" + urllib.parse.urlencode({**params, "format": "json"}))
 
 
-dados = json.load(open("../dados.json", encoding="utf-8"))
+# dados1933.json (versão desde 1933) contém todos os deputados de dados.json e mais os de 1933–51
+base = "../dados1933.json" if os.path.exists("../dados1933.json") else "../dados.json"
+dados = json.load(open(base, encoding="utf-8"))
 dep = {str(d[0]): d for d in dados["deps"]}
 cass = json.load(open("../cassacoes.json", encoding="utf-8"))
+if os.path.exists("../cassacoes1933.json"):
+    cass.update(json.load(open("../cassacoes1933.json", encoding="utf-8")))
 
-q = ("SELECT ?id ?pt WHERE { ?item wdt:P7480 ?id . ?pt schema:about ?item ; "
+q = ("SELECT ?item ?id ?pt WHERE { ?item wdt:P7480 ?id . ?pt schema:about ?item ; "
      "schema:isPartOf <https://pt.wikipedia.org/> . }")
 res = get("https://query.wikidata.org/sparql?" + urllib.parse.urlencode({"query": q, "format": "json"}))
-out = {}
+por_item = {}
 for b in res["results"]["bindings"]:
-    i = b["id"]["value"]
-    if i in dep:
-        out[i] = urllib.parse.unquote(b["pt"]["value"].split("/wiki/", 1)[1])
-print("Wikidata:", len(out))
+    por_item.setdefault(b["item"]["value"], []).append(b)
+
+
+def confere(nome, titulo):
+    """Para itens do Wikidata com mais de um código: o último sobrenome tem de estar no título, e o título
+    não pode indicar outra pessoa da família (Filho, Júnior, Neto) se o nome parlamentar não indica."""
+    n, tt = fold(nome), fold(titulo)
+    if not n or n[-1] not in tt:
+        return False
+    return not any(s in tt and s not in n for s in ("filho", "junior", "neto", "sobrinho"))
+
+
+out, descartados = {}, []
+for item, bs in por_item.items():
+    for b in bs:
+        i = b["id"]["value"]
+        if i not in dep:
+            continue
+        titulo = urllib.parse.unquote(b["pt"]["value"].split("/wiki/", 1)[1])
+        if len(bs) > 1 and not confere(dep[i][1], titulo.replace("_", " ")):
+            descartados.append((dep[i][1], titulo))
+            continue
+        out[i] = titulo
+print("Wikidata:", len(out), "| vínculos descartados (código errado no Wikidata):", descartados)
 
 achados = 0
 for i in cass:
@@ -57,7 +81,7 @@ for i in cass:
         pages = wiki({"action": "query", "prop": "extracts", "explaintext": 1, "titles": title})["query"]["pages"]
         txt = next(iter(pages.values())).get("extract", "")[:20000]
         estado = UF.get(uf, "")
-        if (re.search(r"deputad[oa] federal", txt, re.I) and re.search(r"cassad|AI-5|AI-1|Ato Institucional", txt, re.I)
+        if (re.search(r"deputad[oa] federal", txt, re.I) and re.search(r"cassad|AI-5|AI-1|Ato Institucional|1948", txt, re.I)
                 and (not estado or estado in txt)):
             out[i] = title.replace(" ", "_")
             achados += 1

@@ -32,11 +32,14 @@ troca("const ord = n => n.score == null ? 99 : n.score;",
 troca('hist = `<table class="ser">', "hist = !series.length ? '' : `<table class=\"ser\">")
 troca("function colSource(L){", "function colSource(L){\n  if (L <= 37) return 'posições: sem classificação';")
 troca('<div class="note sources">', '''<div class="note sources">
-<p><b>1933–1951.</b> A Constituinte de 1933–34, a legislatura de 1935–37 e a de 1946–51 vêm das biografias oficiais da Câmara, que listam estado e partido de cada mandato (a API traz poucos deputados de 1946 e quase nenhum partido antes de 1945). Nos anos 1930 os partidos eram estaduais, por isso aparecem com sigla e estado (ex.: PP-MG). “Classistas” são os deputados eleitos por sindicatos e associações profissionais, previstos na Constituição de 1934. Cerca de um terço dos deputados de 1933–37 aparece sem partido (n/i) porque a biografia não o registra. Esses partidos não têm posição ideológica atribuída e aparecem em cinza. A faixa entre 1935–37 e 1946 atravessa os oito anos de Congresso fechado.</p>''')
+<p><b>1933–1951.</b> A Constituinte de 1933–34, a legislatura de 1935–37 e a de 1946–51 vêm das biografias oficiais da Câmara, que listam estado e partido de cada mandato (a API traz poucos deputados de 1946 e quase nenhum partido antes de 1945). Nos anos 1930 os partidos eram estaduais, por isso aparecem com sigla e estado (ex.: PP-MG). “Classistas” são os deputados eleitos por sindicatos e associações profissionais, previstos na Constituição de 1934. Cerca de um terço dos deputados de 1933–37 aparece sem partido (n/i) porque a biografia não o registra. Esses partidos não têm posição ideológica atribuída e aparecem em cinza. A faixa entre 1935–37 e 1946 atravessa os oito anos de Congresso fechado. A legislatura de 1946 inclui também deputados que não aparecem em nenhuma lista da API, encontrados pelos códigos da Câmara registrados no Wikidata; ainda assim faltam alguns (por exemplo, Gregório Bezerra, do PCB). Em 1946–51, a faixa escura marca os eleitos pelo PCB cujos mandatos foram extintos em janeiro de 1948 pela Lei nº 211, depois que o TSE cancelou o registro do partido (maio de 1947).</p>''')
 
 d = open("dados1933.json", encoding="utf-8").read().replace("</", "<\\/")
 p = open("posicoes.json", encoding="utf-8").read().replace("</", "<\\/")
-c = open("cassacoes.json", encoding="utf-8").read().replace("</", "<\\/")
+import json
+cass = json.load(open("cassacoes.json", encoding="utf-8"))
+cass.update({k: cass.get(k, []) + v for k, v in json.load(open("cassacoes1933.json", encoding="utf-8")).items()})
+c = json.dumps(cass, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
 w = open("wikipedia.json", encoding="utf-8").read().replace("</", "<\\/")
 pe = open("perseguicoes.json", encoding="utf-8").read().replace("</", "<\\/")
 HEAD = ('<!doctype html>\n<html lang="pt-BR">\n<head>\n<meta charset="utf-8">\n'

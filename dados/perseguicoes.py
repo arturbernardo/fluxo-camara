@@ -3,7 +3,7 @@
 Como foi montada:
 - Mortos: deputados da base que estão na lista de mortos e desaparecidos políticos reconhecidos pela Comissão
   Nacional da Verdade (relatório final, vol. 3, 2014), cruzada pelo Wikidata (P7480 = código de deputado).
-  Grabois, Marighella e Pomar também estão na lista, mas foram deputados só em 1946, legislatura fora da base.
+  Grabois, Marighella e Pomar foram deputados só em 1946 e aparecem apenas na versão desde 1933.
 - Exilados: menções a exílio, asilo ou banimento nos artigos da Wikipédia e nas biografias da Câmara dos
   deputados de 1951–1991, mais a categoria "Exilados na ditadura militar no Brasil (1964–1985)". Cada caso foi
   lido e só entrou exílio do próprio deputado durante a ditadura (ficaram de fora, por exemplo, exílios de
@@ -11,7 +11,7 @@ Como foi montada:
 
 Gera ../perseguicoes.json: {id: {"exilio": nota, "morte": nota}}.
 """
-import json
+import json, os
 
 EXILIO = {
     3120: "Exilado no Uruguai e na Argentina de 1964 até morrer, em 1976",               # João Goulart
@@ -44,11 +44,15 @@ EXILIO = {
     133873: "Afastado da USP pelo AI-5; foi lecionar no Canadá (classificado como exilado na Wikipédia)",  # Florestan
 }
 MORTE = {
+    130312: "Morto por agentes do Estado em São Paulo, em 1969 (CNV)",                                 # Carlos Marighella
+    4884: "Desaparecido na Guerrilha do Araguaia, em 1973 (CNV)",                                       # Maurício Grabois
+    4900: "Morto por agentes do Estado na Chacina da Lapa, em São Paulo, em 1976 (CNV)",                # Pedro Pomar
     131119: "Preso, torturado e morto por agentes do Estado em 1971; corpo nunca encontrado (CNV)",
     130747: "Morreu no exílio, em Montevidéu, em 1971; reconhecido como vítima da ditadura pela CNV",
 }
 
-dados = json.load(open("../dados.json", encoding="utf-8"))
+base = "../dados1933.json" if os.path.exists("../dados1933.json") else "../dados.json"  # superconjunto
+dados = json.load(open(base, encoding="utf-8"))
 ids = {d[0] for d in dados["deps"]}
 out = {}
 for i, nota in EXILIO.items():

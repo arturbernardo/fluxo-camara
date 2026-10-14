@@ -18,8 +18,9 @@ troca("Câmara dos Deputados · 1951 – 2027", "Câmara dos Deputados · 1933 �
 troca("<h1>O fluxo dos deputados entre partidos</h1>", "<h1>O fluxo dos deputados entre partidos, desde 1933</h1>")
 troca("Clique num bloco para seguir os membros daquela bancada por todas as colunas.</p>",
       "Clique num bloco para seguir os membros daquela bancada por todas as colunas. Esta versão começa na Constituinte de "
-      "1933–34; entre 1937 e 1946 o Congresso esteve fechado pelo Estado Novo. "
-      '<a href="../">Ver a versão a partir de 1951</a>.</p>')
+      "1933–34; entre 1937 e 1946 o Congresso esteve fechado pelo Estado Novo.</p>")
+troca('<p class="alt"><a href="https://arturbernardo.github.io/fluxo-camara/1933/">Ver a versão desde 1933</a>, com a Constituinte de 1933–34, a legislatura de 1935–37 e a de 1946–51.</p>',
+      '<p class="alt"><a href="https://arturbernardo.github.io/fluxo-camara/">Ver a versão a partir de 1951</a>.</p>')
 troca('<button type="button" data-r="39,57">Tudo</button>',
       '<button type="button" data-r="36,57">Tudo</button>\n      <button type="button" data-r="36,42">1933 → 1964</button>')
 troca("const yrRange = L => `${YEAR[L]}–${L === 57 ? '2027' : YEAR[L + 1]}`;",

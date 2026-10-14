@@ -2,12 +2,22 @@
 
 Visualização do fluxo de deputados federais entre partidos, de 1951 a 2027.
 
-**Site:** https://arturbernardo.github.io/fluxo-camara/
+**Site:** https://arturbernardo.github.io/fluxo-camara/ (desde 1951)  
+**Versão desde 1933:** https://arturbernardo.github.io/fluxo-camara/1933/
 
 Cada coluna é uma legislatura e cada bloco, uma bancada na posse. Dentro da coluna, os partidos
 estão ordenados da esquerda para a direita conforme a posição que tinham naquela época. As faixas
 ligam os deputados que voltaram na legislatura seguinte. A página também lista a trajetória de
 cada deputado, com filtros por migração (ex.: passou pelo PMDB e depois pelo PCdoB).
+
+## Versão desde 1933
+
+`1933/index.html` usa o mesmo `template.html`, com as diferenças aplicadas por `build1933.py`, e acrescenta a
+Constituinte de 1933–34, a legislatura de 1935–37 e a de 1946–51. Os partidos desse período saem das biografias
+oficiais da Câmara (`dados/historico1933.py`), que listam estado e partido de cada mandato. Nos anos 1930 os
+partidos eram estaduais e aparecem com sigla e estado (ex.: PP-MG); "classistas" são os deputados de
+representação profissional da Constituição de 1934. Cerca de um terço dos deputados de 1933–37 fica sem partido
+porque a biografia não o registra. Entre 1937 e 1946 o Congresso esteve fechado (Estado Novo).
 
 ## Fonte
 
@@ -68,4 +78,5 @@ python3 wikipedia.py    # liga deputados a artigos da Wikipédia (Wikidata + bus
 python3 perseguicoes.py # lista revisada de exilados e mortos pela ditadura -> ../perseguicoes.json
 cd ..
 python3 build.py        # gera index.html
+python3 build1933.py    # gera 1933/index.html (precisa de dados1933.json: cd dados && python3 historico1933.py)
 ```

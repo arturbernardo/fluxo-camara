@@ -247,9 +247,44 @@ for i in novos:
     if novos[i].get(36) in ("PRP-SP", "PD-SP", "PC-SP"):
         novos[i][36] = "CHAPA-SP"
 
+# --- classistas: a biografia diz qual classe o deputado representava ("Deputado classista representante dos
+# Empregados da Indústria"). Quem ocupava cadeira classista entra no bloco da sua classe, mesmo que fosse filiado a
+# um partido. Menções a classistas de assembleias estaduais não contam.
+def classe(t):
+    for m in re.finditer(r"[^.;]*(?:classista|representante profissional|representação profissional)[^.;]*", t, re.I):
+        s = m.group(0)
+        if re.search(r"Assembleia Legislativa|estadual", s, re.I):
+            continue
+        if not re.search(r"classista representante|representante profissional d|representação profissional d[oa]s (?:empreg|profiss|funcion)", s, re.I):
+            continue
+        if re.search(r"empregador", s, re.I):
+            return "CL-EMPREGADORES"
+        if re.search(r"empregad", s, re.I):
+            return "CL-EMPREGADOS"
+        if re.search(r"liberais|funcionári", s, re.I):
+            return "CL-LIBERAIS"
+        return "CLASSISTA"
+    return None
+
+
+n_cl = 0
+for i in novos:
+    k = classe(cache.get(str(i)) or "")
+    if not k:
+        continue
+    for L in novos[i]:
+        if L in (36, 37) and (novos[i][L] in ("NI", "CLASSISTA") or k != "CLASSISTA"):
+            novos[i][L] = k
+            n_cl += 1
+print("cadeiras classistas identificadas pela biografia:", n_cl)
+
 partidos = dict(dados["parties"])
+partidos["CL-EMPREGADOS"] = ["classistas: empregados", "Deputados classistas representantes dos empregados", "NA", SUCESSORES_45]
+partidos["CL-EMPREGADORES"] = ["classistas: empregadores", "Deputados classistas representantes dos empregadores", "NA", SUCESSORES_45]
+partidos["CL-LIBERAIS"] = ["classistas: prof. liberais e func. públicos",
+                           "Deputados classistas das profissões liberais e dos funcionários públicos", "NA", SUCESSORES_45]
 partidos["PPS46"] = ["PPS", "Partido Popular Sindicalista (1946)", "C", ["PSP"]]
-partidos["CLASSISTA"] = ["classistas", "Deputados classistas (representação profissional, 1933–37)", "NA", SUCESSORES_45]
+partidos["CLASSISTA"] = ["classistas (classe n/i)", "Deputados classistas, classe não identificada (1933–37)", "NA", SUCESSORES_45]
 for i, por_leg in novos.items():
     for L, k in por_leg.items():
         if k not in partidos:

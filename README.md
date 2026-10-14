@@ -16,8 +16,9 @@ cada deputado, com filtros por migração (ex.: passou pelo PMDB e depois pelo P
 Constituinte de 1933–34, a legislatura de 1935–37 e a de 1946–51. Os partidos desse período saem das biografias
 oficiais da Câmara (`dados/historico1933.py`), que listam estado e partido de cada mandato. Nos anos 1930 os
 partidos eram estaduais e aparecem com sigla e estado (ex.: PP-MG); "classistas" são os deputados de
-representação profissional da Constituição de 1934. Cerca de um terço dos deputados de 1933–37 fica sem partido
-porque a biografia não o registra. Entre 1937 e 1946 o Congresso esteve fechado (Estado Novo).
+representação profissional da Constituição de 1934. Quando o mandato não traz o partido, a legenda é procurada
+no texto da biografia e da Wikipédia; na Constituinte de 1933, PRP e Partido Democrático paulistas aparecem como Chapa
+Única por São Paulo Unido. Cerca de um quarto dos deputados de 1933–37 continua sem partido. Entre 1937 e 1946 o Congresso esteve fechado (Estado Novo).
 
 ## Fonte
 

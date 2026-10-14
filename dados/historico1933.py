@@ -164,6 +164,89 @@ for i in novos:
         if novos[i][L] is None:
             novos[i][L] = "NI"
 
+# --- deputados sem partido em 1933–37: procura a legenda no texto das biografias e da Wikipédia ---
+# 1) frases do tipo "elegeu-se ... na legenda do Partido X" (com o ano, quando houver: 1933 -> Constituinte,
+#    1934 -> legislatura de 1935–37); 2) nomes de partidos que só existiram nos anos 1930, em qualquer parte do texto.
+LEGENDAS = [  # (padrão, chave; {uf} = estado do mandato)
+    (r"Chapa Única|São Paulo Unido", "CHAPA-SP"), (r"Partido Autonomista", "PA-DF"),
+    (r"Partido Constitucionalista", "PC-SP"), (r"Partido Republicano Paulista", "PRP-SP"),
+    (r"Partido Democrático de São Paulo|Partido Democrático \(SP\)", "PD-SP"), (r"Partido Economista", "PE-DF"),
+    (r"Partido Republicano Liberal", "PRL-RS"), (r"Frente Única", "FUG-RS"), (r"Partido Republicano Mineiro", "PRM-MG"),
+    (r"Liga Eleitoral Católica", "LEC"), (r"Ação Integralista", "AIB"), (r"Partido Nacional de Alagoas", "PN-AL"),
+    (r"Partido Socialista Flumin", "PSF-RJ"), (r"União Progressista Fluminense", "UPF-RJ"),
+    (r"Partido Popular Radical", "PPR-RJ"),
+]
+AMBIGUOS = [(r"Partido Social Democrático", "PSD-{uf}"), (r"Partido Progressista", "PP-{uf}"),
+            (r"Partido Libertador", "PL-{uf}"), (r"Partido Republicano", "PR-{uf}")]
+NOMES_30.update({"CHAPA-SP": "Chapa Única por São Paulo Unido (PRP + Partido Democrático, 1933)",
+                 "PA-DF": "Partido Autonomista do Distrito Federal", "PD-SP": "Partido Democrático de São Paulo",
+                 "PE-DF": "Partido Economista do Distrito Federal", "AIB": "Ação Integralista Brasileira",
+                 "PN-AL": "Partido Nacional de Alagoas", "PSF-RJ": "Partido Socialista Fluminense",
+                 "PPR-RJ": "Partido Popular Radical (RJ)"})
+
+wiki_titulos = json.load(open("../wikipedia.json", encoding="utf-8")) if os.path.exists("../wikipedia.json") else {}
+
+
+def texto_wiki(i):
+    tit = wiki_titulos.get(str(i))
+    if not tit:
+        return ""
+    p = {"action": "query", "prop": "extracts", "explaintext": 1, "titles": tit.replace("_", " "), "format": "json", "redirects": 1}
+    try:
+        r = json.load(urllib.request.urlopen(urllib.request.Request("https://pt.wikipedia.org/w/api.php?" + urllib.parse.urlencode(p),
+                                             headers={"User-Agent": "fluxo-camara/1.0 (https://github.com/arturbernardo/fluxo-camara)"}), timeout=60))
+        return next(iter(r["query"]["pages"].values())).get("extract", "")[:30000]
+    except Exception:
+        return ""
+
+
+def uf_do_mandato(i, L):
+    for data, uf, _ in mandatos(cache.get(str(i)) or ""):
+        if leg(data) == L and uf:
+            return uf
+    return ufs.get(i)
+
+
+def acha_legenda(texto, L, uf):
+    ano = "1933" if L == 36 else "1934|1935"
+    # frases com "legenda"/"pelo partido" perto do ano da eleição
+    for m in re.finditer(r"[^.]*(?:%s)[^.]*\." % ano, texto):
+        frase = m.group(0)
+        if not re.search(r"legenda|elegeu|eleit|candidat|pel[oa] (?:Partido|Chapa|Liga|Frente|União)", frase):
+            continue
+        for pad, k in LEGENDAS + AMBIGUOS:
+            if re.search(pad, frase):
+                if k == "CHAPA-SP" and L != 36:
+                    continue
+                return k.format(uf=uf)
+    # nomes exclusivos dos anos 1930 em qualquer parte do texto
+    for pad, k in LEGENDAS:
+        if re.search(pad, texto) and not (k == "CHAPA-SP" and L != 36):
+            if k in ("PA-DF", "PE-DF") and uf != "DF":
+                continue
+            return k
+    return None
+
+
+pendentes = [(i, L) for i in novos for L in novos[i] if L in (36, 37) and novos[i][L] == "NI"]
+textos = {}
+with ThreadPoolExecutor(3) as ex:
+    for i, w in zip({i for i, _ in pendentes}, ex.map(texto_wiki, {i for i, _ in pendentes})):
+        textos[i] = w
+achados = 0
+for i, L in pendentes:
+    uf = uf_do_mandato(i, L)
+    k = acha_legenda((cache.get(str(i)) or "") + " " + textos.get(i, ""), L, uf)
+    if k:
+        novos[i][L] = k
+        achados += 1
+print("legendas encontradas no texto para deputados sem partido em 1933–37:", achados, "de", len(pendentes))
+# Constituinte de 1933 em São Paulo: PRP e Partido Democrático concorreram juntos na Chapa Única por São Paulo Unido,
+# e o Partido Constitucionalista (sucessor do PD) só foi fundado em 1934 -> todos contam como Chapa Única
+for i in novos:
+    if novos[i].get(36) in ("PRP-SP", "PD-SP", "PC-SP"):
+        novos[i][36] = "CHAPA-SP"
+
 partidos = dict(dados["parties"])
 partidos["PPS46"] = ["PPS", "Partido Popular Sindicalista (1946)", "C", ["PSP"]]
 partidos["CLASSISTA"] = ["classistas", "Deputados classistas (representação profissional, 1933–37)", "NA", SUCESSORES_45]

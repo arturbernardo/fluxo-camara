@@ -2,3 +2,5 @@ dados/deputados_raw.json
 dados/historico.json
 __pycache__/
 dados/biografias.json
+perfil/cadastro.json
+perfil/consulta_cand_*.zip

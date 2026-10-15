@@ -20,6 +20,16 @@ representação profissional (eleitos por delegados de sindicatos), separados pe
 no texto da biografia e da Wikipédia; na Constituinte de 1933, PRP e Partido Democrático paulistas aparecem como Chapa
 Única por São Paulo Unido. Cerca de um quarto dos deputados de 1933–37 continua sem partido. Entre 1937 e 1946 o Congresso esteve fechado (Estado Novo).
 
+## Quem são os deputados (perfil, 1933–2027)
+
+**Página:** https://arturbernardo.github.io/fluxo-camara/perfil/
+
+Gênero, idade na posse, escolaridade, profissões agrupadas, renovação e cor ou raça dos deputados, por legislatura,
+contando todos os que tomaram posse (inclusive suplentes). Cadastro e profissões: API de Dados Abertos da Câmara
+(`perfil/cadastro.py`). Cor ou raça: candidaturas a deputado federal no TSE de 2014, 2018 e 2022, ligadas aos
+deputados por data de nascimento e estado (`perfil/cor_raca.py`); população: censos de 2010 e 2022 (IBGE, SIDRA 9605).
+Os indicadores são calculados por `perfil/perfil.py` e a página gerada por `perfil/build.py`.
+
 ## Quem podia votar (eleitorado, 1872–2026)
 
 **Página:** https://arturbernardo.github.io/fluxo-camara/eleitorado/

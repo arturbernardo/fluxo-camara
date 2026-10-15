@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Perfil dos deputados federais por legislatura, de 1933 a 2027: gênero, idade, escolaridade, profissões, renovação e cor ou raça.">
+</head>
+<body>
+<title>Quem são os deputados</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;500;600;800&family=Newsreader:opsz,wght@6..72,400;6..72,500&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#f4f5f3; --surface:#fbfbfa; --ink:#14181b; --ink2:#4b5257; --muted:#868c8f;
+  --grid:#dfe2df; --axis:#b9bdb8; --accent:#0d5c48; --accent-soft:#cfe3dc; --band:#e9ebe7;
+  --e0:#0d5c48; --e1:#4f9a83; --e2:#a3cbbd; --e3:#dcebe5; --na:#d6d6d0;
+  --r-branca:#4c78a8; --r-parda:#e08a2b; --r-preta:#5a9e4b; --r-amarela:#b279a2; --r-indigena:#c4504b; --r-ni:#b9bdb8;
+  --sans:"Libre Franklin",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --serif:"Newsreader",Georgia,"Times New Roman",serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  color-scheme:dark;
+  --bg:#101315; --surface:#171b1e; --ink:#eef0ee; --ink2:#b7bdbd; --muted:#80878a;
+  --grid:#272c2f; --axis:#3a4044; --accent:#4fbf9c; --accent-soft:#1f3a33; --band:#1f2427;
+  --e0:#5fcfac; --e1:#3a8f76; --e2:#2a5c4e; --e3:#1f3a33; --na:#363b3e;
+  --r-branca:#7fa8ee; --r-parda:#f0a050; --r-preta:#7cc46a; --r-amarela:#d3a2c6; --r-indigena:#ec7a73; --r-ni:#5c6266;
+}}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#101315; --surface:#171b1e; --ink:#eef0ee; --ink2:#b7bdbd; --muted:#80878a;
+  --grid:#272c2f; --axis:#3a4044; --accent:#4fbf9c; --accent-soft:#1f3a33; --band:#1f2427;
+  --e0:#5fcfac; --e1:#3a8f76; --e2:#2a5c4e; --e3:#1f3a33; --na:#363b3e;
+  --r-branca:#7fa8ee; --r-parda:#f0a050; --r-preta:#7cc46a; --r-amarela:#d3a2c6; --r-indigena:#ec7a73; --r-ni:#5c6266;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;padding-inline:20px;padding-block:0 56px}
+.wrap{max-width:1120px;margin:0 auto;display:flex;flex-direction:column;gap:34px}
+header{padding-top:36px;display:flex;flex-direction:column;gap:10px}
+.eyebrow{font-size:12px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:600}
+h1{font-weight:800;font-size:clamp(32px,4.8vw,52px);line-height:1.02;letter-spacing:-.02em;margin:0;text-wrap:balance}
+h2{font-weight:800;font-size:22px;letter-spacing:-.01em;margin:0;text-wrap:balance}
+.lede{font-family:var(--serif);font-size:18px;line-height:1.55;color:var(--ink2);max-width:68ch;margin:0}
+.alt{margin:0;font-size:14px}
+a{color:var(--accent)}
+.alt a{font-weight:600}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--grid);border:1px solid var(--grid);border-radius:6px;overflow:hidden}
+@media (max-width:720px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.stat{background:var(--surface);padding:12px 14px;display:flex;flex-direction:column;gap:2px}
+.stat .y{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.stat b{font-family:var(--mono);font-weight:500;font-size:26px;font-variant-numeric:tabular-nums}
+.stat span{font-size:12.5px;color:var(--ink2);line-height:1.3}
+section{display:flex;flex-direction:column;gap:10px}
+section>p{margin:0;color:var(--ink2);max-width:74ch;font-size:15px}
+.panel{background:var(--surface);border:1px solid var(--grid);border-radius:8px;padding:14px 14px 8px}
+.scroll{overflow-x:auto}
+svg text{fill:var(--ink2);font-family:var(--sans)}
+.axis-t{font-size:11.5px;fill:var(--muted);font-variant-numeric:tabular-nums}
+.lbl{font-size:12px;font-weight:600}
+.val{font-size:10.5px;font-family:var(--mono);font-variant-numeric:tabular-nums}
+.bandlbl{font-size:11px;fill:var(--muted);font-style:italic}
+#tip{position:fixed;pointer-events:none;z-index:9;background:var(--ink);color:var(--bg);font-size:12.5px;line-height:1.45;padding:8px 10px;border-radius:5px;max-width:320px;opacity:0;transition:opacity .08s}
+#tip .k{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;vertical-align:0}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--ink2)}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+.note{font-size:13px;color:var(--muted);max-width:92ch;display:flex;flex-direction:column;gap:6px}
+.note p{margin:0}
+details{border-top:1px solid var(--grid);padding-top:10px}
+summary{cursor:pointer;font-weight:600;font-size:14px}
+table{border-collapse:collapse;font-size:12.5px}
+th,td{padding:4px 8px;border-bottom:1px solid var(--grid);text-align:right;white-space:nowrap}
+th{color:var(--muted);font-weight:600;font-size:11.5px}
+td:first-child,th:first-child{text-align:left}
+.grp{font-size:13px;color:var(--ink2)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div id="tip" role="status" aria-live="polite"></div>
+<div class="wrap">
+<header>
+  <div class="eyebrow">Câmara dos Deputados · 1933 – 2027</div>
+  <h1>Quem são os deputados</h1>
+  <p class="lede">Gênero, idade, escolaridade, profissão, renovação e cor dos deputados federais, legislatura por legislatura, da Constituinte de 1933 à Câmara atual. Contam todos os que tomaram posse em cada legislatura, inclusive suplentes.</p>
+  <p class="alt"><a href="https://arturbernardo.github.io/fluxo-camara/">Ver o fluxo dos deputados entre partidos</a></p>
+</header>
+
+<div class="stats" id="stats"></div>
+
+<section>
+  <h2>Mulheres</h2>
+  <p>A primeira deputada, Carlota de Queirós, foi eleita para a Constituinte de 1933. Até os anos 1980, nunca houve mais de oito mulheres numa mesma legislatura.</p>
+  <div class="panel scroll"><svg id="ch-gen" role="img" aria-label="Porcentagem de mulheres por legislatura"></svg></div>
+</section>
+
+<section>
+  <h2>Idade na posse</h2>
+  <p>Em anos. Linha: idade mediana no início da legislatura. Faixa: metade dos deputados, entre o primeiro e o terceiro quartil.</p>
+  <div class="panel scroll"><svg id="ch-idade" role="img" aria-label="Idade mediana dos deputados por legislatura"></svg></div>
+</section>
+
+<section>
+  <h2>Escolaridade</h2>
+  <p>Entre os deputados com escolaridade registrada. Nos anos 1930, um quarto dos registros está em branco.</p>
+  <div class="legend" id="leg-esc"></div>
+  <div class="panel scroll"><svg id="ch-esc" role="img" aria-label="Escolaridade dos deputados por legislatura"></svg></div>
+</section>
+
+<section>
+  <h2>Profissões</h2>
+  <p>Porcentagem de deputados que declaram ao menos uma profissão de cada grupo (um deputado pode estar em mais de um grupo, então as colunas não somam 100%). Cor mais escura, maior a parcela.</p>
+  <div class="panel scroll"><svg id="ch-prof" role="img" aria-label="Grupos de profissões por legislatura"></svg></div>
+  <details>
+    <summary>Quais profissões entram em cada grupo</summary>
+    <div class="grp" id="grupos"></div>
+  </details>
+</section>
+
+<section>
+  <h2>Renovação</h2>
+  <p>Porcentagem de deputados em primeiro mandato na Câmara (sem mandato em nenhuma legislatura anterior, desde o Império).</p>
+  <div class="panel scroll"><svg id="ch-ren" role="img" aria-label="Porcentagem de estreantes por legislatura"></svg></div>
+</section>
+
+<section>
+  <h2>Cor ou raça</h2>
+  <p>A Câmara não registra cor ou raça. O TSE pergunta aos candidatos desde 2014; aqui está a autodeclaração na candidatura de cada deputado, ao lado da população nos censos de 2010 e 2022.</p>
+  <div class="legend" id="leg-cor"></div>
+  <div class="panel scroll"><svg id="ch-cor" role="img" aria-label="Cor ou raça dos deputados e da população"></svg></div>
+</section>
+
+<details>
+  <summary>Tabela com os valores por legislatura</summary>
+  <div class="scroll" style="margin-top:10px"><table id="tab"></table></div>
+</details>
+
+<div class="note">
+  <p><b>Fontes.</b> Deputados por legislatura: base do <a href="https://arturbernardo.github.io/fluxo-camara/1933/">fluxo da Câmara desde 1933</a> (API de Dados Abertos e biografias da Câmara). Sexo, data de nascimento, escolaridade e profissões: cadastro de cada deputado na API de Dados Abertos da Câmara. Cor ou raça: candidaturas a deputado federal no TSE (eleições de 2014, 2018 e 2022), ligadas aos deputados pela data de nascimento e pelo estado; população: IBGE, censos de 2010 e 2022 (SIDRA, tabela 9605).</p>
+  <p><b>Cuidados.</b> Contam todos os que tomaram posse na legislatura, inclusive suplentes; por isso o total passa de 513. As profissões são as declaradas à Câmara, agrupadas à mão; a escolaridade usa as categorias da Câmara, que mudaram de nome ao longo do tempo. A cor ou raça é autodeclarada e muda entre eleições, nos dois sentidos: dos 330 deputados que se candidataram em 2018 e em 2022, 45 mudaram a declaração (25 de branca para parda, 16 de parda para branca, e outros 4 casos). Para a idade, a posse foi considerada no início de cada legislatura.</p>
+</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script id="data" type="application/json">{"legislaturas":[{"L":36,"ano":"1933","n":236,"mulheres":1,"nomes_mulheres":["CARLOTA DE QUEIRÓS"],"idade":{"mediana":44.7,"p25":38.2,"p75":53.6,"n":228,"menos40":75,"mais60":26},"escolaridade":{"Superior completo ou mais":183,"Superior incompleto":0,"Ensino médio ou técnico":0,"Ensino fundamental ou menos":1},"esc_n":184,"profissoes":{"Direito":100,"Empresários e comércio":20,"Agropecuária":22,"Saúde":45,"Educação":52,"Comunicação e cultura":72,"Engenharia, economia e gestão":16,"Serviço público":15,"Segurança e militares":22,"Religiosos":3,"Trabalhadores e sindicalistas":10,"Outros":3},"prof_n":194,"novos":179,"renovacao_valida":true,"cor":null},{"L":37,"ano":"1935","n":320,"mulheres":2,"nomes_mulheres":["BERTHA LUTZ","CARLOTA DE QUEIRÓS"],"idade":{"mediana":45.1,"p25":37.6,"p75":52.8,"n":277,"menos40":91,"mais60":32},"escolaridade":{"Superior completo ou mais":215,"Superior incompleto":0,"Ensino médio ou técnico":1,"Ensino fundamental ou menos":0},"esc_n":216,"profissoes":{"Direito":136,"Empresários e comércio":31,"Agropecuária":30,"Saúde":53,"Educação":64,"Comunicação e cultura":89,"Engenharia, economia e gestão":23,"Serviço público":20,"Segurança e militares":25,"Religiosos":3,"Trabalhadores e sindicalistas":17,"Outros":8},"prof_n":252,"novos":160,"renovacao_valida":true,"cor":null},{"L":38,"ano":"1946","n":337,"mulheres":0,"nomes_mulheres":[],"idade":{"mediana":45.5,"p25":38.1,"p75":51.9,"n":327,"menos40":100,"mais60":33},"escolaridade":{"Superior completo ou mais":276,"Superior incompleto":4,"Ensino médio ou técnico":7,"Ensino fundamental ou menos":3},"esc_n":290,"profissoes":{"Direito":193,"Empresários e comércio":56,"Agropecuária":69,"Saúde":66,"Educação":109,"Comunicação e cultura":120,"Engenharia, economia e gestão":38,"Serviço público":85,"Segurança e militares":29,"Religiosos":6,"Trabalhadores e sindicalistas":32,"Outros":11},"prof_n":328,"novos":252,"renovacao_valida":true,"cor":null},{"L":39,"ano":"1951","n":399,"mulheres":1,"nomes_mulheres":["IVETTE VARGAS"],"idade":{"mediana":45.8,"p25":38.9,"p75":52.4,"n":397,"menos40":117,"mais60":34},"escolaridade":{"Superior completo ou mais":325,"Superior incompleto":4,"Ensino médio ou técnico":15,"Ensino fundamental ou menos":4},"esc_n":348,"profissoes":{"Direito":218,"Empresários e comércio":78,"Agropecuária":75,"Saúde":78,"Educação":132,"Comunicação e cultura":116,"Engenharia, economia e gestão":62,"Serviço público":69,"Segurança e militares":28,"Religiosos":6,"Trabalhadores e sindicalistas":38,"Outros":10},"prof_n":391,"novos":249,"renovacao_valida":true,"cor":null},{"L":40,"ano":"1955","n":444,"mulheres":2,"nomes_mulheres":["IVETTE VARGAS","NITA COSTA"],"idade":{"mediana":46.0,"p25":40.2,"p75":52.9,"n":438,"menos40":104,"mais60":39},"escolaridade":{"Superior completo ou mais":352,"Superior incompleto":6,"Ensino médio ou técnico":18,"Ensino fundamental ou menos":4},"esc_n":380,"profissoes":{"Direito":239,"Empresários e comércio":86,"Agropecuária":68,"Saúde":79,"Educação":112,"Comunicação e cultura":106,"Engenharia, economia e gestão":60,"Serviço público":51,"Segurança e militares":27,"Religiosos":5,"Trabalhadores e sindicalistas":34,"Outros":13},"prof_n":429,"novos":228,"renovacao_valida":true,"cor":null},{"L":41,"ano":"1959","n":455,"mulheres":1,"nomes_mulheres":["IVETTE VARGAS"],"idade":{"mediana":46.1,"p25":40.6,"p75":52.7,"n":449,"menos40":102,"mais60":36},"escolaridade":{"Superior completo ou mais":359,"Superior incompleto":2,"Ensino médio ou técnico":13,"Ensino fundamental ou menos":4},"esc_n":378,"profissoes":{"Direito":235,"Empresários e comércio":86,"Agropecuária":65,"Saúde":71,"Educação":113,"Comunicação e cultura":95,"Engenharia, economia e gestão":83,"Serviço público":50,"Segurança e militares":27,"Religiosos":3,"Trabalhadores e sindicalistas":50,"Outros":10},"prof_n":447,"novos":201,"renovacao_valida":true,"cor":null},{"L":42,"ano":"1963","n":572,"mulheres":2,"nomes_mulheres":["IVETTE VARGAS","NECY NOVAES"],"idade":{"mediana":46.3,"p25":40.1,"p75":52.0,"n":568,"menos40":141,"mais60":48},"escolaridade":{"Superior completo ou mais":427,"Superior incompleto":5,"Ensino médio ou técnico":26,"Ensino fundamental ou menos":5},"esc_n":463,"profissoes":{"Direito":274,"Empresários e comércio":95,"Agropecuária":71,"Saúde":85,"Educação":112,"Comunicação e cultura":95,"Engenharia, economia e gestão":104,"Serviço público":50,"Segurança e militares":26,"Religiosos":8,"Trabalhadores e sindicalistas":70,"Outros":8},"prof_n":562,"novos":291,"renovacao_valida":true,"cor":null},{"L":43,"ano":"1967","n":487,"mulheres":6,"nomes_mulheres":["IVETTE VARGAS","NECY NOVAES","JÚLIA STEINBRUCH","LÍGIA DOUTEL DE ANDRADE","MARIA LÚCIA","NYSIA CARONE"],"idade":{"mediana":47.5,"p25":40.7,"p75":54.1,"n":487,"menos40":109,"mais60":50},"escolaridade":{"Superior completo ou mais":355,"Superior incompleto":1,"Ensino médio ou técnico":14,"Ensino fundamental ou menos":3},"esc_n":373,"profissoes":{"Direito":240,"Empresários e comércio":81,"Agropecuária":75,"Saúde":62,"Educação":103,"Comunicação e cultura":63,"Engenharia, economia e gestão":100,"Serviço público":26,"Segurança e militares":24,"Religiosos":7,"Trabalhadores e sindicalistas":60,"Outros":6},"prof_n":482,"novos":186,"renovacao_valida":true,"cor":null},{"L":44,"ano":"1971","n":334,"mulheres":1,"nomes_mulheres":["NECY NOVAES"],"idade":{"mediana":47.0,"p25":41.2,"p75":55.0,"n":334,"menos40":66,"mais60":28},"escolaridade":{"Superior completo ou mais":277,"Superior incompleto":1,"Ensino médio ou técnico":8,"Ensino fundamental ou menos":1},"esc_n":287,"profissoes":{"Direito":188,"Empresários e comércio":44,"Agropecuária":55,"Saúde":41,"Educação":81,"Comunicação e cultura":42,"Engenharia, economia e gestão":73,"Serviço público":25,"Segurança e militares":16,"Religiosos":1,"Trabalhadores e sindicalistas":44,"Outros":1},"prof_n":332,"novos":147,"renovacao_valida":true,"cor":null},{"L":45,"ano":"1975","n":396,"mulheres":1,"nomes_mulheres":["LYGIA LESSA BASTOS"],"idade":{"mediana":46.4,"p25":39.6,"p75":54.1,"n":396,"menos40":103,"mais60":47},"escolaridade":{"Superior completo ou mais":323,"Superior incompleto":5,"Ensino médio ou técnico":15,"Ensino fundamental ou menos":3},"esc_n":346,"profissoes":{"Direito":232,"Empresários e comércio":55,"Agropecuária":64,"Saúde":38,"Educação":92,"Comunicação e cultura":54,"Engenharia, economia e gestão":67,"Serviço público":33,"Segurança e militares":20,"Religiosos":4,"Trabalhadores e sindicalistas":61,"Outros":5},"prof_n":393,"novos":178,"renovacao_valida":true,"cor":null},{"L":46,"ano":"1979","n":482,"mulheres":4,"nomes_mulheres":["LYGIA LESSA BASTOS","CRISTINA TAVARES","JUNIA MARISE","LÚCIA VIVEIROS"],"idade":{"mediana":47.4,"p25":40.8,"p75":54.3,"n":482,"menos40":106,"mais60":56},"escolaridade":{"Superior completo ou mais":407,"Superior incompleto":7,"Ensino médio ou técnico":22,"Ensino fundamental ou menos":2},"esc_n":438,"profissoes":{"Direito":272,"Empresários e comércio":73,"Agropecuária":85,"Saúde":53,"Educação":109,"Comunicação e cultura":55,"Engenharia, economia e gestão":90,"Serviço público":44,"Segurança e militares":20,"Religiosos":2,"Trabalhadores e sindicalistas":51,"Outros":12},"prof_n":473,"novos":219,"renovacao_valida":true,"cor":null},{"L":47,"ano":"1983","n":570,"mulheres":8,"nomes_mulheres":["IVETTE VARGAS","CRISTINA TAVARES","JUNIA MARISE","LÚCIA VIVEIROS","BETE MENDES","IRMA PASSONI","MYRTHES BEVILACQUA","RITA FURTADO"],"idade":{"mediana":48.0,"p25":41.9,"p75":54.9,"n":567,"menos40":107,"mais60":73},"escolaridade":{"Superior completo ou mais":490,"Superior incompleto":10,"Ensino médio ou técnico":31,"Ensino fundamental ou menos":10},"esc_n":541,"profissoes":{"Direito":305,"Empresários e comércio":92,"Agropecuária":71,"Saúde":56,"Educação":133,"Comunicação e cultura":76,"Engenharia, economia e gestão":130,"Serviço público":40,"Segurança e militares":9,"Religiosos":1,"Trabalhadores e sindicalistas":56,"Outros":12},"prof_n":560,"novos":263,"renovacao_valida":true,"cor":null},{"L":48,"ano":"1987","n":589,"mulheres":29,"nomes_mulheres":null,"idade":{"mediana":47.1,"p25":41.3,"p75":54.1,"n":587,"menos40":125,"mais60":60},"escolaridade":{"Superior completo ou mais":519,"Superior incompleto":9,"Ensino médio ou técnico":50,"Ensino fundamental ou menos":8},"esc_n":586,"profissoes":{"Direito":252,"Empresários e comércio":125,"Agropecuária":80,"Saúde":60,"Educação":166,"Comunicação e cultura":71,"Engenharia, economia e gestão":168,"Serviço público":34,"Segurança e militares":12,"Religiosos":10,"Trabalhadores e sindicalistas":62,"Outros":32},"prof_n":588,"novos":337,"renovacao_valida":true,"cor":null},{"L":49,"ano":"1991","n":613,"mulheres":30,"nomes_mulheres":null,"idade":{"mediana":48.2,"p25":40.9,"p75":54.0,"n":613,"menos40":135,"mais60":69},"escolaridade":{"Superior completo ou mais":516,"Superior incompleto":14,"Ensino médio ou técnico":66,"Ensino fundamental ou menos":17},"esc_n":613,"profissoes":{"Direito":211,"Empresários e comércio":149,"Agropecuária":91,"Saúde":74,"Educação":166,"Comunicação e cultura":73,"Engenharia, economia e gestão":192,"Serviço público":41,"Segurança e militares":17,"Religiosos":8,"Trabalhadores e sindicalistas":71,"Outros":32},"prof_n":613,"novos":344,"renovacao_valida":true,"cor":null},{"L":50,"ano":"1995","n":634,"mulheres":42,"nomes_mulheres":null,"idade":{"mediana":48.6,"p25":41.6,"p75":55.0,"n":634,"menos40":125,"mais60":83},"escolaridade":{"Superior completo ou mais":517,"Superior incompleto":26,"Ensino médio ou técnico":80,"Ensino fundamental ou menos":11},"esc_n":634,"profissoes":{"Direito":188,"Empresários e comércio":143,"Agropecuária":72,"Saúde":97,"Educação":141,"Comunicação e cultura":53,"Engenharia, economia e gestão":192,"Serviço público":32,"Segurança e militares":9,"Religiosos":8,"Trabalhadores e sindicalistas":63,"Outros":29},"prof_n":632,"novos":308,"renovacao_valida":true,"cor":null},{"L":51,"ano":"1999","n":638,"mulheres":39,"nomes_mulheres":null,"idade":{"mediana":49.0,"p25":42.6,"p75":55.2,"n":638,"menos40":98,"mais60":78},"escolaridade":{"Superior completo ou mais":523,"Superior incompleto":46,"Ensino médio ou técnico":59,"Ensino fundamental ou menos":9},"esc_n":637,"profissoes":{"Direito":174,"Empresários e comércio":132,"Agropecuária":74,"Saúde":99,"Educação":149,"Comunicação e cultura":60,"Engenharia, economia e gestão":176,"Serviço público":39,"Segurança e militares":11,"Religiosos":15,"Trabalhadores e sindicalistas":53,"Outros":30},"prof_n":636,"novos":243,"renovacao_valida":true,"cor":null},{"L":52,"ano":"2003","n":626,"mulheres":52,"nomes_mulheres":null,"idade":{"mediana":50.8,"p25":44.2,"p75":57.0,"n":626,"menos40":83,"mais60":99},"escolaridade":{"Superior completo ou mais":507,"Superior incompleto":55,"Ensino médio ou técnico":51,"Ensino fundamental ou menos":10},"esc_n":623,"profissoes":{"Direito":176,"Empresários e comércio":107,"Agropecuária":73,"Saúde":98,"Educação":157,"Comunicação e cultura":53,"Engenharia, economia e gestão":166,"Serviço público":43,"Segurança e militares":14,"Religiosos":20,"Trabalhadores e sindicalistas":70,"Outros":39},"prof_n":624,"novos":234,"renovacao_valida":true,"cor":null},{"L":53,"ano":"2007","n":636,"mulheres":52,"nomes_mulheres":null,"idade":{"mediana":51.2,"p25":44.8,"p75":58.2,"n":636,"menos40":83,"mais60":138},"escolaridade":{"Superior completo ou mais":532,"Superior incompleto":42,"Ensino médio ou técnico":47,"Ensino fundamental ou menos":12},"esc_n":633,"profissoes":{"Direito":167,"Empresários e comércio":125,"Agropecuária":70,"Saúde":88,"Educação":140,"Comunicação e cultura":63,"Engenharia, economia e gestão":187,"Serviço público":42,"Segurança e militares":15,"Religiosos":18,"Trabalhadores e sindicalistas":71,"Outros":36},"prof_n":632,"novos":259,"renovacao_valida":true,"cor":null},{"L":54,"ano":"2011","n":671,"mulheres":60,"nomes_mulheres":null,"idade":{"mediana":52.3,"p25":45.0,"p75":59.6,"n":671,"menos40":107,"mais60":159},"escolaridade":{"Superior completo ou mais":541,"Superior incompleto":54,"Ensino médio ou técnico":56,"Ensino fundamental ou menos":17},"esc_n":668,"profissoes":{"Direito":144,"Empresários e comércio":134,"Agropecuária":67,"Saúde":83,"Educação":116,"Comunicação e cultura":69,"Engenharia, economia e gestão":188,"Serviço público":49,"Segurança e militares":15,"Religiosos":19,"Trabalhadores e sindicalistas":69,"Outros":39},"prof_n":669,"novos":273,"renovacao_valida":true,"cor":null},{"L":55,"ano":"2015","n":623,"mulheres":65,"nomes_mulheres":null,"idade":{"mediana":52.2,"p25":42.7,"p75":59.7,"n":623,"menos40":117,"mais60":148},"escolaridade":{"Superior completo ou mais":522,"Superior incompleto":46,"Ensino médio ou técnico":41,"Ensino fundamental ou menos":14},"esc_n":623,"profissoes":{"Direito":143,"Empresários e comércio":122,"Agropecuária":37,"Saúde":79,"Educação":90,"Comunicação e cultura":72,"Engenharia, economia e gestão":171,"Serviço público":42,"Segurança e militares":22,"Religiosos":16,"Trabalhadores e sindicalistas":50,"Outros":32},"prof_n":623,"novos":250,"renovacao_valida":true,"cor":{"Branca":483,"Parda":109,"Preta":26}},{"L":56,"ano":"2019","n":613,"mulheres":91,"nomes_mulheres":null,"idade":{"mediana":49.6,"p25":40.5,"p75":58.8,"n":613,"menos40":149,"mais60":128},"escolaridade":{"Superior completo ou mais":518,"Superior incompleto":36,"Ensino médio ou técnico":49,"Ensino fundamental ou menos":10},"esc_n":613,"profissoes":{"Direito":139,"Empresários e comércio":127,"Agropecuária":34,"Saúde":67,"Educação":72,"Comunicação e cultura":62,"Engenharia, economia e gestão":130,"Serviço público":51,"Segurança e militares":38,"Religiosos":18,"Trabalhadores e sindicalistas":32,"Outros":23},"prof_n":612,"novos":298,"renovacao_valida":true,"cor":{"Branca":456,"Preta":26,"Parda":124,"Amarela":2,"Indígena":1}},{"L":57,"ano":"2023","n":648,"mulheres":118,"nomes_mulheres":null,"idade":{"mediana":49.8,"p25":41.1,"p75":59.9,"n":648,"menos40":137,"mais60":161},"escolaridade":{"Superior completo ou mais":514,"Superior incompleto":46,"Ensino médio ou técnico":33,"Ensino fundamental ou menos":13},"esc_n":606,"profissoes":{"Direito":123,"Empresários e comércio":131,"Agropecuária":38,"Saúde":58,"Educação":75,"Comunicação e cultura":59,"Engenharia, economia e gestão":114,"Serviço público":48,"Segurança e militares":47,"Religiosos":18,"Trabalhadores e sindicalistas":30,"Outros":38},"prof_n":595,"novos":290,"renovacao_valida":true,"cor":{"Branca":448,"Preta":38,"Parda":151,"Amarela":3,"Indígena":5,"Não informado":1}}],"ends":{"36":"1935","37":"1937","38":"1951"},"grupos":{"Direito":["Advogad","Promotor","Procurador","Juiz","Tabeli","Serventuári","Escriv","Jurista","Magistrad","Defensor"],"Empresários e comércio":["Empresári","Banqueir","Corretor","Representante comercial","Vendedor","Armador","Construtor","Comerciante","Industrial"],"Agropecuária":["Agricultor","Pecuarista","Agropecuarist","Fazendeir","Proprietári","Criador","Agrônom","Produtor rural","Pescador","Avicultor","Piscicultor"],"Saúde":["Médic","Dentista","Farmacêutic","Enfermeir","Veterinári","Psicólog","Fisioterapeut","Nutricionist","Psicanalist","Auxiliar de enfermagem"],"Educação":["Professor","Pedagog"],"Comunicação e cultura":["Jornalist","Comunicador","Radialist","Publicitári","Escritor","Poet","Músic","Ator","Atriz","Artista","Relações públicas","Comunicólog","Cantor","Apresentador","Dramaturg"],"Engenharia, economia e gestão":["Engenheir","Arquitet","Economist","Administrador","Contador","Consultor","Químic","Geólog","Analista","Agrimensor","Estatístic"],"Serviço público":["Servidor","Gestor","Gestora","Diplomat","Agente fiscal","Auditor","Empregado públic","Funcionári"],"Segurança e militares":["Militar","Policial","Delegad","Bombeiro"],"Religiosos":["Pastor","Padre","Teólog","Sacerdot","Missionári","Bispo"],"Trabalhadores e sindicalistas":["Bancári","Comerciári","Metalúrgic","Operári","Industriári","Eletricist","Motorista","Ferroviári","Sindicalist","Profissional técnic","Profissional gráfic","Torneiro","Telegrafist","Escriturári","Trabalhador","Mecânic","Gráfic","Portuári","Garimpeir","Ferramenteir","Balconist","Jornaleir","Carpinteir","Marceneir","Impressor","Siderúrgic","Aeroviári","Radiotelegrafist","Auxiliar administrativ"]},"esc":["Superior completo ou mais","Superior incompleto","Ensino médio ou técnico","Ensino fundamental ou menos"],"populacao_cor":{"2010":{"Total":190755799,"Branca":91051646,"Preta":14517961,"Amarela":2084288,"Parda":82277333,"Indígena":817963},"2022":{"Total":203080756,"Branca":88252121,"Preta":20656458,"Amarela":850130,"Parda":92083286,"Indígena":1227642}}}</script>
+<script>
+const D = JSON.parse(document.getElementById('data').textContent);
+const R = D.legislaturas, ENDS = D.ends || {};
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const pct = (a, b) => b ? 100 * a / b : null;
+const fp = v => v == null ? '—' : v.toLocaleString('pt-BR', {maximumFractionDigits: v < 10 ? 1 : 0}) + '%';
+const yrRange = (r, i) => `${r.ano}–${ENDS[r.L] || (R[i + 1] ? R[i + 1].ano : '2027')}`;
+const ESTADO_NOVO = {after: 37, t: 'Estado Novo'}, DITADURA = [43, 47];
+
+const tip = document.getElementById('tip');
+function showTip(e, html){ tip.innerHTML = html; tip.style.opacity = 1; const x = Math.min(e.clientX + 14, innerWidth - tip.offsetWidth - 8), y = Math.min(e.clientY + 14, innerHeight - tip.offsetHeight - 8); tip.style.left = x + 'px'; tip.style.top = y + 'px'; }
+function hideTip(){ tip.style.opacity = 0; }
+
+function frame(id, H, ymax, ticks, fmt){
+  const box = document.getElementById(id).parentNode;
+  const W = Math.max(760, box.clientWidth - 28), m = {t: 26, r: 16, b: 26, l: 42};
+  const x = d3.scaleBand().domain(R.map(r => r.L)).range([m.l, W - m.r]).paddingInner(.22).paddingOuter(.1);
+  const y = d3.scaleLinear().domain([0, ymax]).range([H - m.b, m.t]);
+  const svg = d3.select('#' + id).attr('viewBox', `0 0 ${W} ${H}`).attr('width', W).attr('height', H);
+  svg.selectAll('*').remove();
+  // ditadura e Estado Novo como faixas de contexto
+  const xd0 = x(DITADURA[0]) - x.step() * x.paddingInner() / 2, xd1 = x(DITADURA[1]) + x.bandwidth() + x.step() * x.paddingInner() / 2;
+  svg.append('rect').attr('x', xd0).attr('width', xd1 - xd0).attr('y', m.t).attr('height', H - m.b - m.t).attr('fill', css('--band'));
+  svg.append('text').attr('class', 'bandlbl').attr('x', xd0 + 4).attr('y', m.t - 6).text('ditadura');
+  const xe = x(38) - x.step() * x.paddingInner() / 2;
+  svg.append('line').attr('x1', xe).attr('x2', xe).attr('y1', m.t).attr('y2', H - m.b).attr('stroke', css('--axis')).attr('stroke-dasharray', '3 3');
+  svg.append('text').attr('class', 'bandlbl').attr('x', xe - 4).attr('y', m.t - 6).attr('text-anchor', 'end').text('Estado Novo ▸');
+  ticks.forEach(v => { svg.append('line').attr('x1', m.l).attr('x2', W - m.r).attr('y1', y(v)).attr('y2', y(v)).attr('stroke', css('--grid'));
+    svg.append('text').attr('class', 'axis-t').attr('x', m.l - 6).attr('y', y(v) + 4).attr('text-anchor', 'end').text(fmt(v)); });
+  R.forEach(r => svg.append('text').attr('class', 'axis-t').attr('x', x(r.L) + x.bandwidth() / 2).attr('y', H - 8).attr('text-anchor', 'middle').text(r.ano));
+  return {svg, x, y, W, H, m};
+}
+function bar(svg, x, y, r, v, fill, html){
+  const h = y(0) - y(v);
+  svg.append('path').attr('fill', fill)
+    .attr('d', h > 0 ? `M${x(r.L)},${y(0)}V${y(v) + Math.min(3, h)}q0,-3 3,-3h${x.bandwidth() - 6}q3,0 3,3V${y(0)}Z` : '');
+  svg.append('rect').attr('x', x(r.L) - 2).attr('width', x.bandwidth() + 4).attr('y', y.range()[1]).attr('height', y(0) - y.range()[1]).attr('fill', 'transparent')
+    .on('mousemove', e => showTip(e, html)).on('mouseleave', hideTip);
+}
+
+function drawGenero(){
+  const {svg, x, y} = frame('ch-gen', 250, 20, [0, 5, 10, 15, 20], v => v + '%');
+  R.forEach((r, i) => {
+    const v = pct(r.mulheres, r.n);
+    bar(svg, x, y, r, v, css('--accent'), `<b>${yrRange(r, i)}</b><br>${r.mulheres} mulheres de ${r.n} deputados (${fp(v)})` + (r.nomes_mulheres && r.nomes_mulheres.length ? '<br>' + r.nomes_mulheres.join(', ') : ''));
+    if (i === R.length - 1 || r.ano === '1933' || r.ano === '1987') svg.append('text').attr('class', 'val').attr('x', x(r.L) + x.bandwidth() / 2).attr('y', y(v) - 5).attr('text-anchor', 'middle').text(fp(v));
+  });
+}
+
+function drawIdade(){
+  const f = frame('ch-idade', 250, 70, [], v => v); f.y.domain([30, 70]);
+  [30, 40, 50, 60, 70].forEach(v => { f.svg.append('line').attr('x1', f.m.l).attr('x2', f.W - f.m.r).attr('y1', f.y(v)).attr('y2', f.y(v)).attr('stroke', css('--grid'));
+    f.svg.append('text').attr('class', 'axis-t').attr('x', f.m.l - 6).attr('y', f.y(v) + 4).attr('text-anchor', 'end').text(v); });
+  const cx = r => f.x(r.L) + f.x.bandwidth() / 2;
+  const ok = R.filter(r => r.idade.mediana != null);
+  f.svg.append('path').attr('d', d3.area().x(cx).y0(r => f.y(r.idade.p25)).y1(r => f.y(r.idade.p75))(ok)).attr('fill', css('--accent-soft'));
+  f.svg.append('path').attr('d', d3.line().x(cx).y(r => f.y(r.idade.mediana))(ok)).attr('fill', 'none').attr('stroke', css('--accent')).attr('stroke-width', 2);
+  ok.forEach((r, i) => {
+    f.svg.append('circle').attr('cx', cx(r)).attr('cy', f.y(r.idade.mediana)).attr('r', 3.5).attr('fill', css('--accent')).attr('stroke', css('--surface')).attr('stroke-width', 1.5);
+    f.svg.append('rect').attr('x', f.x(r.L)).attr('width', f.x.bandwidth()).attr('y', f.m.t).attr('height', f.H - f.m.b - f.m.t).attr('fill', 'transparent')
+      .on('mousemove', e => showTip(e, `<b>${yrRange(r, R.indexOf(r))}</b><br>Idade mediana: <b>${r.idade.mediana.toLocaleString('pt-BR')} anos</b><br>Metade entre ${r.idade.p25.toLocaleString('pt-BR')} e ${r.idade.p75.toLocaleString('pt-BR')} anos<br>Menos de 40: ${fp(pct(r.idade.menos40, r.idade.n))} · 60 ou mais: ${fp(pct(r.idade.mais60, r.idade.n))}`))
+      .on('mouseleave', hideTip);
+  });
+  const l = ok[ok.length - 1], fst = ok[0];
+  f.svg.append('text').attr('class', 'val').attr('x', cx(fst)).attr('y', f.y(fst.idade.mediana) - 9).attr('text-anchor', 'middle').text(fst.idade.mediana.toLocaleString('pt-BR'));
+  f.svg.append('text').attr('class', 'val').attr('x', cx(l)).attr('y', f.y(l.idade.mediana) - 9).attr('text-anchor', 'middle').text(l.idade.mediana.toLocaleString('pt-BR'));
+}
+
+const ESC_COR = ['--e0', '--e1', '--e2', '--e3'];
+function drawEsc(){
+  document.getElementById('leg-esc').innerHTML = D.esc.map((g, i) => `<span><i style="background:var(${ESC_COR[i]})"></i>${g}</span>`).join('');
+  const {svg, x, y} = frame('ch-esc', 270, 100, [0, 25, 50, 75, 100], v => v + '%');
+  R.forEach((r, i) => {
+    let acc = 0;
+    D.esc.forEach((g, k) => { const v = pct(r.escolaridade[g], r.esc_n); if (!v) return;
+      svg.append('rect').attr('x', x(r.L)).attr('width', x.bandwidth()).attr('y', y(acc + v) + 1).attr('height', Math.max(0, y(acc) - y(acc + v) - 2)).attr('rx', 2).attr('fill', css(ESC_COR[k]));
+      acc += v; });
+    svg.append('rect').attr('x', x(r.L) - 2).attr('width', x.bandwidth() + 4).attr('y', y(100)).attr('height', y(0) - y(100)).attr('fill', 'transparent')
+      .on('mousemove', e => showTip(e, `<b>${yrRange(r, i)}</b><br>` + D.esc.map((g, k) => `<span class="k" style="background:var(${ESC_COR[k]})"></span>${g}: ${fp(pct(r.escolaridade[g], r.esc_n))}`).join('<br>') + `<br><span style="opacity:.75">${r.esc_n} de ${r.n} com escolaridade registrada</span>`))
+      .on('mouseleave', hideTip);
+  });
+}
+
+function drawProf(){
+  const grupos = Object.keys(D.legislaturas[0].profissoes);
+  const media = g => d3.mean(R, r => pct(r.profissoes[g], r.prof_n));
+  const ord = grupos.filter(g => g !== 'Outros').sort((a, b) => media(b) - media(a)).concat(['Outros']);
+  const box = document.getElementById('ch-prof').parentNode;
+  const lw = 210, cw = Math.max(36, (box.clientWidth - 28 - lw - 10) / R.length), ch = 26;
+  const W = lw + cw * R.length + 10, H = 30 + ch * ord.length + 24;
+  const svg = d3.select('#ch-prof').attr('viewBox', `0 0 ${W} ${H}`).attr('width', W).attr('height', H);
+  svg.selectAll('*').remove();
+  const max = d3.max(R, r => d3.max(ord, g => pct(r.profissoes[g], r.prof_n)));
+  const col = d3.scaleSequential(d3.interpolateRgb(css('--surface'), css('--accent'))).domain([0, max]);
+  R.forEach((r, j) => svg.append('text').attr('class', 'axis-t').attr('x', lw + j * cw + cw / 2).attr('y', 18).attr('text-anchor', 'middle').text(r.ano));
+  ord.forEach((g, i) => {
+    svg.append('text').attr('x', lw - 8).attr('y', 30 + i * ch + ch / 2 + 4).attr('text-anchor', 'end').attr('font-size', 12.5).attr('fill', css('--ink')).text(g);
+    R.forEach((r, j) => {
+      const v = pct(r.profissoes[g], r.prof_n);
+      svg.append('rect').attr('x', lw + j * cw + 1).attr('y', 30 + i * ch + 1).attr('width', cw - 2).attr('height', ch - 2).attr('rx', 2).attr('fill', col(v))
+        .on('mousemove', e => showTip(e, `<b>${g}</b> · ${yrRange(r, j)}<br>${r.profissoes[g]} de ${r.prof_n} deputados com profissão declarada (${fp(v)})`)).on('mouseleave', hideTip);
+      if (cw >= 34) svg.append('text').attr('class', 'val').attr('x', lw + j * cw + cw / 2).attr('y', 30 + i * ch + ch / 2 + 4).attr('text-anchor', 'middle')
+        .attr('fill', v > max * .55 ? css('--surface') : css('--ink2')).attr('pointer-events', 'none').text(Math.round(v));
+    });
+  });
+  svg.append('text').attr('class', 'axis-t').attr('x', lw).attr('y', H - 6).text('valores em % dos deputados com profissão declarada');
+  document.getElementById('grupos').innerHTML = Object.entries(D.grupos).map(([g, ks]) => `<p><b>${g}:</b> ${ks.map(k => k + '…').join(', ')}</p>`).join('') + '<p><b>Outros:</b> as demais profissões (ex.: sociólogo, historiador, assistente social, atleta, estudante).</p>';
+}
+
+function drawRen(){
+  const {svg, x, y} = frame('ch-ren', 250, 80, [0, 20, 40, 60, 80], v => v + '%');
+  R.forEach((r, i) => {
+    const v = pct(r.novos, r.n);
+    bar(svg, x, y, r, v, css('--accent'), `<b>${yrRange(r, i)}</b><br>${r.novos} de ${r.n} em primeiro mandato (${fp(v)})`);
+    if (i === R.length - 1 || r.ano === '1946' || r.ano === '1987') svg.append('text').attr('class', 'val').attr('x', x(r.L) + x.bandwidth() / 2).attr('y', y(v) - 5).attr('text-anchor', 'middle').text(fp(v));
+  });
+}
+
+const CORES = [['Branca', '--r-branca'], ['Parda', '--r-parda'], ['Preta', '--r-preta'], ['Amarela', '--r-amarela'], ['Indígena', '--r-indigena'], ['Não informado', '--r-ni']];
+function drawCor(){
+  document.getElementById('leg-cor').innerHTML = CORES.slice(0, 5).map(([c, v]) => `<span><i style="background:var(${v})"></i>${c}</span>`).join('');
+  const rows = [];
+  const P = D.populacao_cor;
+  rows.push({t: 'População, censo 2010', d: P['2010'], pop: true});
+  R.filter(r => r.cor).forEach(r => rows.push({t: `Deputados ${r.ano}–${R[R.indexOf(r) + 1] ? R[R.indexOf(r) + 1].ano : '2027'}`, d: r.cor}));
+  rows.splice(2, 0);
+  rows.push({t: 'População, censo 2022', d: P['2022'], pop: true});
+  const box = document.getElementById('ch-cor').parentNode;
+  const W = Math.max(640, box.clientWidth - 28), lw = 190, rh = 30, H = rows.length * rh + 30;
+  const x = d3.scaleLinear().domain([0, 100]).range([lw, W - 16]);
+  const svg = d3.select('#ch-cor').attr('viewBox', `0 0 ${W} ${H}`).attr('width', W).attr('height', H);
+  svg.selectAll('*').remove();
+  [0, 25, 50, 75, 100].forEach(v => svg.append('text').attr('class', 'axis-t').attr('x', x(v)).attr('y', H - 6).attr('text-anchor', 'middle').text(v + '%'));
+  rows.forEach((row, i) => {
+    const tot = CORES.reduce((s, [c]) => s + (row.d[c] || 0), 0);
+    const yy = i * rh + 4;
+    svg.append('text').attr('x', lw - 10).attr('y', yy + rh / 2 + 2).attr('text-anchor', 'end').attr('font-size', 12.5).attr('fill', css(row.pop ? '--muted' : '--ink')).attr('font-weight', row.pop ? 400 : 600).text(row.t);
+    let acc = 0;
+    CORES.forEach(([c, v]) => { const val = 100 * (row.d[c] || 0) / tot; if (!val) return;
+      svg.append('rect').attr('x', x(acc) + 1).attr('width', Math.max(1, x(acc + val) - x(acc) - 2)).attr('y', yy).attr('height', rh - 8).attr('rx', 2).attr('fill', css(v))
+        .attr('opacity', row.pop ? .55 : 1)
+        .on('mousemove', e => showTip(e, `<b>${row.t}</b><br><span class="k" style="background:var(${v})"></span>${c}: ${fp(val)}` + (row.pop ? '' : ` (${row.d[c]} deputados)`))).on('mouseleave', hideTip);
+      if (x(acc + val) - x(acc) > 34) svg.append('text').attr('class', 'val').attr('x', x(acc) + 5).attr('y', yy + rh / 2 + 1).attr('fill', '#141414').attr('pointer-events', 'none').text(fp(val));
+      acc += val; });
+  });
+}
+
+function stats(){
+  const l = R[R.length - 1], f = R[0];
+  const negros = l.cor ? 100 * ((l.cor.Preta || 0) + (l.cor.Parda || 0)) / Object.values(l.cor).reduce((a, b) => a + b, 0) : null;
+  const p = D.populacao_cor['2022'], popNeg = 100 * (p.Preta + p.Parda) / p.Total;
+  const items = [
+    [`${l.ano}–2027`, fp(pct(l.mulheres, l.n)), `de mulheres (${l.mulheres} de ${l.n}); eram ${fp(pct(f.mulheres, f.n))} em 1933`],
+    [`${l.ano}–2027`, l.idade.mediana.toLocaleString('pt-BR') + ' anos', `de idade mediana na posse; ${f.idade.mediana.toLocaleString('pt-BR')} em 1933`],
+    [`${l.ano}–2027`, fp(negros), `se declaram pretos ou pardos; na população, ${fp(popNeg)} (censo 2022)`],
+    [`${l.ano}–2027`, fp(pct(l.novos, l.n)), 'estão no primeiro mandato'],
+  ];
+  document.getElementById('stats').innerHTML = items.map(([y, v, t]) => `<div class="stat"><span class="y">${y}</span><b>${v}</b><span>${t}</span></div>`).join('');
+}
+function table(){
+  document.getElementById('tab').innerHTML = '<thead><tr><th>Legislatura</th><th>Deputados</th><th>Mulheres</th><th>Idade mediana</th><th>Superior completo</th><th>Direito</th><th>Empresários</th><th>Estreantes</th></tr></thead><tbody>' +
+    R.map((r, i) => `<tr><td>${yrRange(r, i)}</td><td>${r.n}</td><td>${r.mulheres} (${fp(pct(r.mulheres, r.n))})</td><td>${r.idade.mediana ?? '—'}</td><td>${fp(pct(r.escolaridade['Superior completo ou mais'], r.esc_n))}</td><td>${fp(pct(r.profissoes['Direito'], r.prof_n))}</td><td>${fp(pct(r.profissoes['Empresários e comércio'], r.prof_n))}</td><td>${fp(pct(r.novos, r.n))}</td></tr>`).join('') + '</tbody>';
+}
+function all(){ drawGenero(); drawIdade(); drawEsc(); drawProf(); drawRen(); drawCor(); }
+stats(); table(); all();
+let rt; addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(all, 150); });
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', all);
+new MutationObserver(all).observe(document.documentElement, {attributes: true, attributeFilter: ['data-theme']});
+</script>
+
+</body>
+</html>

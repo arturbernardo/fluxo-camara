@@ -64,6 +64,16 @@ th,td{padding:4px 8px;border-bottom:1px solid var(--grid);text-align:right;white
 th{color:var(--muted);font-weight:600;font-size:11.5px}
 td:first-child,th:first-child{text-align:left}
 .grp{font-size:13px;color:var(--ink2)}
+.controls-p{font-size:14px;color:var(--ink2)}
+.controls-p select{font:inherit;font-size:14px;color:var(--ink);background:var(--surface);border:1px solid var(--axis);border-radius:5px;padding:5px 8px;margin:0 4px}
+.controls-p select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.proj-res{font-size:16px;color:var(--ink)}
+.proj-res b{font-family:var(--mono);font-weight:500;font-size:22px}
+.proj-tab{display:flex;flex-wrap:wrap;gap:8px}
+.proj-tab button{font:inherit;font-size:12.5px;background:var(--surface);border:1px solid var(--grid);border-radius:5px;padding:6px 10px;color:var(--ink2);cursor:pointer;text-align:left}
+.proj-tab button b{display:block;font-family:var(--mono);font-weight:500;color:var(--ink);font-size:14px}
+.proj-tab button[aria-pressed="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.small{font-size:13px!important;color:var(--muted)!important}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 
@@ -82,6 +92,19 @@ td:first-child,th:first-child{text-align:left}
   <h2>Mulheres</h2>
   <p>A primeira deputada, Carlota de Queirós, foi eleita para a Constituinte de 1933. Até os anos 1980, nunca houve mais de oito mulheres numa mesma legislatura.</p>
   <div class="panel scroll"><svg id="ch-gen" role="img" aria-label="Porcentagem de mulheres por legislatura"></svg></div>
+</section>
+
+<section>
+  <h2>Quando a Câmara teria metade de mulheres?</h2>
+  <p>Uma reta ajustada à porcentagem de mulheres a partir do ano escolhido até a eleição de 2026, prolongada até cruzar 50%. O resultado depende muito do ponto de partida: desde 1933 o ritmo é lentíssimo, porque quase nada mudou por meio século; só nas últimas eleições, ele parece rápido. Escolha o início e compare.</p>
+  <div class="controls-p">
+    <label for="proj-ini">Calcular o ritmo a partir de <select id="proj-ini"></select> até a eleição de 2026</label>
+  </div>
+  <div class="proj-res" id="proj-res"></div>
+  <div class="panel scroll"><svg id="ch-proj" role="img" aria-label="Projeção linear da porcentagem de mulheres na Câmara"></svg></div>
+  <div class="proj-tab" id="proj-tab"></div>
+  <p class="small">O último ponto (círculo vazado, 2027) são as eleitas em 2026 segundo o TSE: <span id="proj-2026"></span>. Os demais contam todos os que tomaram posse em cada legislatura, inclusive suplentes; na eleição de 2022, as eleitas eram 17,5% e, com as suplentes que assumiram, a Câmara chegou a 18,2%.</p>
+  <p class="small">É uma extrapolação, não uma previsão: supõe que o ritmo médio do período se mantenha. Mudanças assim costumam desacelerar perto de um limite, ou acelerar com mudanças de regra (como as cotas de candidaturas e de recursos para mulheres), então a reta serve para comparar ritmos, não para cravar um ano.</p>
 </section>
 
 <section>
@@ -179,6 +202,58 @@ function drawGenero(){
     const v = pct(r.mulheres, r.n);
     bar(svg, x, y, r, v, css('--accent'), `<b>${yrRange(r, i)}</b><br>${r.mulheres} mulheres de ${r.n} deputados (${fp(v)})` + (r.nomes_mulheres && r.nomes_mulheres.length ? '<br>' + r.nomes_mulheres.join(', ') : ''));
     if (i === R.length - 1 || r.ano === '1933' || r.ano === '1987') svg.append('text').attr('class', 'val').attr('x', x(r.L) + x.bandwidth() / 2).attr('y', y(v) - 5).attr('text-anchor', 'middle').text(fp(v));
+  });
+}
+
+// ---------- projeção de 50% de mulheres ----------
+const PROJ_PONTOS = R.map(r => ({ano: +r.ano, v: pct(r.mulheres, r.n), r}));
+if (D.eleitos2026) PROJ_PONTOS.push({ano: 2027, v: pct(D.eleitos2026.mulheres, D.eleitos2026.n), r: {mulheres: D.eleitos2026.mulheres, n: D.eleitos2026.n}, tse: true});
+function regressao(ini){
+  const p = PROJ_PONTOS.filter(d => d.ano >= ini);
+  const n = p.length, mx = d3.mean(p, d => d.ano), my = d3.mean(p, d => d.v);
+  const b = d3.sum(p, d => (d.ano - mx) * (d.v - my)) / d3.sum(p, d => (d.ano - mx) ** 2);
+  const a = my - b * mx;
+  return {a, b, n, ano50: b > 0 ? (50 - a) / b : null, pontos: p};
+}
+const fano = v => v == null ? 'nunca, neste ritmo' : Math.round(v).toLocaleString('pt-BR', {useGrouping: false});
+const projSel = document.getElementById('proj-ini');
+PROJ_PONTOS.slice(0, -2).forEach(d => projSel.add(new Option(d.ano, d.ano)));
+projSel.value = 1987;
+projSel.onchange = drawProj;
+if (D.eleitos2026) document.getElementById('proj-2026').textContent = `${D.eleitos2026.mulheres} mulheres entre ${D.eleitos2026.n} eleitos (${fp(pct(D.eleitos2026.mulheres, D.eleitos2026.n))}), com ${513 - D.eleitos2026.n} cadeiras ainda sem resultado definido no arquivo de ${D.eleitos2026.gerado}`;
+function drawProj(){
+  const ini = +projSel.value, g = regressao(ini);
+  const porEleicao = g.b * 4;
+  document.getElementById('proj-res').innerHTML = g.ano50
+    ? `Com o ritmo desde ${ini} (${porEleicao.toLocaleString('pt-BR', {maximumFractionDigits: 1})} pontos percentuais por eleição), a Câmara chegaria a 50% de mulheres por volta de <b>${fano(g.ano50)}</b>.`
+    : `Desde ${ini}, a porcentagem de mulheres não cresceu: neste ritmo, a Câmara <b>nunca</b> chegaria a 50%.`;
+  const marcos = [1933, 1951, 1967, 1987, 1995, 2003, 2011, 2015].filter(a => PROJ_PONTOS.some(d => d.ano === a));
+  document.getElementById('proj-tab').innerHTML = marcos.map(a => `<button type="button" data-a="${a}" aria-pressed="${a === ini}">desde ${a}<b>${fano(regressao(a).ano50)}</b></button>`).join('');
+  document.querySelectorAll('#proj-tab button').forEach(b => b.onclick = () => { projSel.value = b.dataset.a; drawProj(); });
+  const box = document.getElementById('ch-proj').parentNode;
+  const W = Math.max(720, box.clientWidth - 28), H = 300, m = {t: 18, r: 20, b: 26, l: 42};
+  const fim = g.ano50 ? Math.min(Math.max(2040, g.ano50 + 8), 2400) : 2060;
+  const x = d3.scaleLinear().domain([1930, fim]).range([m.l, W - m.r]);
+  const y = d3.scaleLinear().domain([0, 55]).range([H - m.b, m.t]);
+  const svg = d3.select('#ch-proj').attr('viewBox', `0 0 ${W} ${H}`).attr('width', W).attr('height', H);
+  svg.selectAll('*').remove();
+  [0, 10, 20, 30, 40, 50].forEach(v => { svg.append('line').attr('x1', m.l).attr('x2', W - m.r).attr('y1', y(v)).attr('y2', y(v)).attr('stroke', css(v === 50 ? '--axis' : '--grid')).attr('stroke-dasharray', v === 50 ? '4 3' : null);
+    svg.append('text').attr('class', 'axis-t').attr('x', m.l - 6).attr('y', y(v) + 4).attr('text-anchor', 'end').text(v + '%'); });
+  x.ticks(8).forEach(v => svg.append('text').attr('class', 'axis-t').attr('x', x(v)).attr('y', H - 8).attr('text-anchor', 'middle').text(v));
+  svg.append('rect').attr('x', x(ini) - 4).attr('width', x(PROJ_PONTOS[PROJ_PONTOS.length - 1].ano) - x(ini) + 8).attr('y', m.t).attr('height', H - m.b - m.t).attr('fill', css('--band'));
+  svg.append('text').attr('class', 'bandlbl').attr('x', x(ini)).attr('y', m.t + 12).text('período usado');
+  const xEnd = g.ano50 ? Math.min(g.ano50, fim) : fim;
+  svg.append('line').attr('x1', x(ini)).attr('x2', x(xEnd)).attr('y1', y(g.a + g.b * ini)).attr('y2', y(Math.min(55, g.a + g.b * xEnd)))
+    .attr('stroke', css('--accent')).attr('stroke-width', 2).attr('stroke-dasharray', '6 4');
+  if (g.ano50 && g.ano50 <= fim) {
+    svg.append('circle').attr('cx', x(g.ano50)).attr('cy', y(50)).attr('r', 5).attr('fill', css('--accent'));
+    svg.append('text').attr('class', 'lbl').attr('x', x(g.ano50)).attr('y', y(50) - 10).attr('text-anchor', g.ano50 > fim - 20 ? 'end' : 'middle').attr('fill', css('--accent')).text('50% em ~' + fano(g.ano50));
+  }
+  PROJ_PONTOS.forEach(d => {
+    const usado = d.ano >= ini;
+    svg.append('circle').attr('cx', x(d.ano)).attr('cy', y(d.v)).attr('r', 3.5).attr('fill', usado ? css('--accent') : css('--axis')).attr('stroke', css('--surface')).attr('stroke-width', 1.5)
+      .attr('fill', d.tse ? css('--surface') : (usado ? css('--accent') : css('--axis'))).attr('stroke', d.tse ? css('--accent') : css('--surface')).attr('stroke-width', d.tse ? 2 : 1.5)
+      .on('mousemove', e => showTip(e, (d.tse ? `<b>2027–2031</b> (eleitos em 2026, segundo o TSE)<br>` : `<b>${d.ano}</b><br>`) + `${d.r.mulheres} mulheres de ${d.r.n} (${fp(d.v)})` + (usado ? '' : '<br><i>fora do período usado</i>'))).on('mouseleave', hideTip);
   });
 }
 
@@ -296,7 +371,7 @@ function table(){
   document.getElementById('tab').innerHTML = '<thead><tr><th>Legislatura</th><th>Deputados</th><th>Mulheres</th><th>Idade mediana</th><th>Superior completo</th><th>Direito</th><th>Empresários</th><th>Estreantes</th></tr></thead><tbody>' +
     R.map((r, i) => `<tr><td>${yrRange(r, i)}</td><td>${r.n}</td><td>${r.mulheres} (${fp(pct(r.mulheres, r.n))})</td><td>${r.idade.mediana ?? '—'}</td><td>${fp(pct(r.escolaridade['Superior completo ou mais'], r.esc_n))}</td><td>${fp(pct(r.profissoes['Direito'], r.prof_n))}</td><td>${fp(pct(r.profissoes['Empresários e comércio'], r.prof_n))}</td><td>${fp(pct(r.novos, r.n))}</td></tr>`).join('') + '</tbody>';
 }
-function all(){ drawGenero(); drawIdade(); drawEsc(); drawProf(); drawRen(); drawCor(); }
+function all(){ drawGenero(); drawProj(); drawIdade(); drawEsc(); drawProf(); drawRen(); drawCor(); }
 stats(); table(); all();
 let rt; addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(all, 150); });
 matchMedia('(prefers-color-scheme: dark)').addEventListener('change', all);

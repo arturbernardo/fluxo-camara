@@ -106,7 +106,18 @@ for L in LEGS:
         "cor": raca or None,
     })
 
-json.dump({"legislaturas": out, "ends": dados.get("ends", {}), "grupos": GRUPOS, "esc": [g for g, _ in ESC],
+# eleição de 2026 (legislatura que toma posse em 2027): eleitos segundo o TSE, ainda sem dados da Câmara
+import csv, io, os, zipfile
+eleitos2026 = None
+if os.path.exists("consulta_cand_2026.zip"):
+    z = zipfile.ZipFile("consulta_cand_2026.zip")
+    nome = next(n for n in z.namelist() if n.endswith("_BRASIL.csv"))
+    linhas = [r for r in csv.DictReader(io.TextIOWrapper(z.open(nome), encoding="latin-1"), delimiter=";")
+              if r["DS_CARGO"] == "DEPUTADO FEDERAL" and r["DS_SIT_TOT_TURNO"].startswith("ELEITO")]
+    eleitos2026 = {"n": len(linhas), "mulheres": sum(r["DS_GENERO"] == "FEMININO" for r in linhas),
+                   "gerado": linhas[0]["DT_GERACAO"] if linhas else None}
+
+json.dump({"eleitos2026": eleitos2026, "legislaturas": out, "ends": dados.get("ends", {}), "grupos": GRUPOS, "esc": [g for g, _ in ESC],
            "populacao_cor": cor["populacao"]},
           open("perfil.json", "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
 print("escolaridades não classificadas:", sem_classe)
